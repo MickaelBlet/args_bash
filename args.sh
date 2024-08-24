@@ -23,11 +23,6 @@
 # SOFTWARE.
 #
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    >&2 echo "Please source args.sh file."
-    exit 1
-fi
-
 declare -A ARGS
 
 # options
@@ -241,230 +236,154 @@ args_set_usage_widths() {
 #   example:
 #     args_add_argument --name="FOO" --help="help of FOO" --dest="FOO"
 args_add_argument() {
-    local -A options
-    eval "$(__args_get_options "options" "name:,help:,default:,dest:,required:" "$@")"
-    local strerror="${options[strerror]:-}"
-    local default="${options[default]:-}"
-    local dest="${options[dest]:-}"
-    local help="${options[help]:-}"
-    local name="${options[name]:-}"
-    local required="${options[required]:-}"
-
-    # error
-    if [ -n "$strerror" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: $strerror"
+    local result_getopt
+    if ! result_getopt="$(getopt --alternative --longoptions "action:,default:,dest:,help:,metavar:,required" -- "" "${@}")"; then
+        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: show in previous error message"
         return 1
     fi
+    local action="store"
+    local default=""
+    local dest=""
+    local help=""
+    local metavar=""
+    local required=false
+    eval set -- "$result_getopt"
+    while true; do
+        case $1 in
+            "--")
+                shift
+                break;;
+            "--action")
+                action="${2,,}"
+                shift 2;;
+            "--default")
+                default="$2"
+                shift 2;;
+            "--dest")
+                dest="$2"
+                shift 2;;
+            "--help")
+                help="$2"
+                shift 2;;
+            "--metavar")
+                metavar="$2"
+                shift 2;;
+            "--required")
+                required=true
+                shift;;
+            *)
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: unrecognized option '$1'"
+                return 1;;
+        esac
+    done
+
+    if [[ "$action" != "store" ]] && [[ "$action" != "store_true" ]] && [[ "$action" != "store_false" ]]; then
+        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: unknown action '$action'"
+        return 1
+    fi
+
     # default and required
-    if [ -n "$default" ] && [ -n "$required" ] && [ "$required" = "true" ]; then
+    if [ -n "$default" ] && [ "$required" = "true" ]; then
         >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--default' used with '--required'"
         return 1
     fi
-    # empty name
-    if [ -z "$name" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--name' option is required"
-        return 1
-    fi
-    # already name exists
-    if __args_already_exists "$name"; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: argument name '$name' already exists"
-        return 1
-    fi
 
-    __ARGS_ARGUMENT_NAME+=("$name")
-    __ARGS_ARGUMENT_HELP+=("$help")
-    __ARGS_ARGUMENT_DEFAULT+=("$default")
-    __ARGS_ARGUMENT_DEST+=("$dest")
-    if [ -n "$required" ] && [ "$required" = "true" ]; then
-        __ARGS_ARGUMENT_REQUIRED+=(true)
-    else
-        __ARGS_ARGUMENT_REQUIRED+=(false)
-    fi
-}
-
-# Add a boolean option
-#   option params:
-#     --dest   Destination variable
-#     --help   Usage helper
-#     --long   Long option name
-#     --short  Short option name
-#   example:
-#     args_add_bool_option --short="f" --long="foo" --help="help of foo" --dest="FOO"
-args_add_bool_option() {
-    local -A options
-    eval "$(__args_get_options "options" "short:,long:,help:,dest:" "$@")"
-    local strerror="${options[strerror]:-}"
-    local dest="${options[dest]:-}"
-    local help="${options[help]:-}"
-    local long="${options[long]:-}"
-    local short="${options[short]:-}"
-
-    # error
-    if [ -n "$strerror" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: $strerror"
-        return 1
-    fi
-    # oneof short or long
-    if [ -z "$short" ] && [ -z "$long" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: oneof '--short/--long' option is required"
-        return 1
-    fi
-    if [ -n "$short" ]; then
-        # size of short
-        if [ "${#short}" -ne 1 ]; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option '$short' length not equal 1"
-            return 1
-        fi
-        # already short exists
-        if __args_already_exists "$short"; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option '$short' already exists"
-            return 1
-        fi
-    fi
-    if [ -n "$long" ]; then
-        # already long exists
-        if __args_already_exists "$long"; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: long option '$long' already exists"
-            return 1
-        fi
-    fi
-
-    __ARGS_OPTION_TYPE+=("boolean")
-    __ARGS_OPTION_SHORT+=("$short")
-    __ARGS_OPTION_LONG+=("$long")
-    __ARGS_OPTION_METAVAR+=("")
-    __ARGS_OPTION_HELP+=("$help")
-    __ARGS_OPTION_DEFAULT+=(false)
-    __ARGS_OPTION_DEST+=("$dest")
-    __ARGS_OPTION_REQUIRED+=(false)
-}
-
-# Add a reverse boolean option
-#   option params:
-#     --dest   Destination variable
-#     --help   Usage helper
-#     --long   Long option name
-#     --short  Short option name
-#   example:
-#     args_add_reverse_bool_option --short="f" --long="foo" --help="help of foo" --dest="FOO"
-args_add_reverse_bool_option() {
-    local -A options
-    eval "$(__args_get_options "options" "short:,long:,help:,dest:" "$@")"
-    local strerror="${options[strerror]:-}"
-    local dest="${options[dest]:-}"
-    local help="${options[help]:-}"
-    local long="${options[long]:-}"
-    local short="${options[short]:-}"
-
-    # error
-    if [ -n "$strerror" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: $strerror"
-        return 1
-    fi
-    # oneof short or long
-    if [ -z "$short" ] && [ -z "$long" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: oneof short/long option is required"
-        return 1
-    fi
-    if [ -n "$short" ]; then
-        # size of short
-        if [ "${#short}" -ne 1 ]; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short '$short' length not equal 1"
-            return 1
-        fi
-        # already short exists
-        if __args_already_exists "$short"; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short '$short' already exists"
-            return 1
-        fi
-    fi
-    if [ -n "$long" ]; then
-        # already long exists
-        if __args_already_exists "$long"; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: long '$long' already exists"
-            return 1
-        fi
-    fi
-
-    __ARGS_OPTION_TYPE+=("reverse_boolean")
-    __ARGS_OPTION_SHORT+=("$short")
-    __ARGS_OPTION_LONG+=("$long")
-    __ARGS_OPTION_METAVAR+=("")
-    __ARGS_OPTION_HELP+=("$help")
-    __ARGS_OPTION_DEFAULT+=(true)
-    __ARGS_OPTION_DEST+=("$dest")
-    __ARGS_OPTION_REQUIRED+=(false)
-}
-
-# Add a option who take a argument
-#   option params:
-#     --default   Default value of option
-#     --dest      Destination variable
-#     --help      Usage helper
-#     --long      Long option name
-#     --metavar   Usage argument name (if not set use long/short name)
-#     --required  This option is required
-#     --short     Short option name
-#   example:
-#     args_add_option --short="f" --long="foo" --help="help of foo" --dest="FOO"
-args_add_option() {
-    local -A options
-    eval "$(__args_get_options "options" "short:,long:,help:,metavar:,default:,dest:,required:" "$@")"
-    local strerror="${options[strerror]:-}"
-    local default="${options[default]:-}"
-    local dest="${options[dest]:-}"
-    local help="${options[help]:-}"
-    local long="${options[long]:-}"
-    local metavar="${options[metavar]:-}"
-    local required="${options[required]:-}"
-    local short="${options[short]:-}"
-
-    # error
-    if [ -n "$strerror" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: $strerror"
-        return 1
-    fi
     # default and required
-    if [ -n "$default" ] && [ -n "$required" ] && [ "$required" = "true" ]; then
+    if [ -n "$default" ] && [ "$required" = "true" ]; then
         >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--default' used with '--required'"
         return 1
     fi
-    # oneof short or long
-    if [ -z "$short" ] && [ -z "$long" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: oneof '--short/--long' option is required"
+
+    if [ $# -eq 0 ]; then
+        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: need a flag or argument name"
         return 1
     fi
-    if [ -n "$short" ]; then
-        # size of short
-        if [ "${#short}" -ne 1 ]; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option '$short' length not equal 1"
-            return 1
-        fi
-        # already short exists
-        if __args_already_exists "$short"; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option '$short' already exists"
-            return 1
-        fi
-    fi
-    if [ -n "$long" ]; then
-        # already long exists
-        if __args_already_exists "$long"; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: long option '$long' already exists"
-            return 1
-        fi
-    fi
 
-    __ARGS_OPTION_TYPE+=("option")
-    __ARGS_OPTION_SHORT+=("$short")
-    __ARGS_OPTION_LONG+=("$long")
-    __ARGS_OPTION_METAVAR+=("$metavar")
-    __ARGS_OPTION_HELP+=("$help")
-    __ARGS_OPTION_DEFAULT+=("$default")
-    __ARGS_OPTION_DEST+=("$dest")
-    if [ -n "$required" ] && [ "$required" = "true" ]; then
-        __ARGS_OPTION_REQUIRED+=(true)
+    local is_argument=false
+    local is_flag=false
+    local short_flags=()
+    local long_flags=()
+    local argument_name=""
+    # check format of argument
+    while [ $# -ne 0 ]; do
+        if [[ "$1" == "--"* ]]; then
+            # already exists
+            if __args_already_exists "${1:2}"; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: option name '${1}' already exists"
+                return 1
+            fi
+            is_flag=true
+            long_flags+=("${1:2}")
+        elif [[ "$1" == "-"* ]]; then
+            # size of short
+            if [ "${#1}" -ne 2 ]; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option name '$1' not valid"
+                return 1
+            fi
+            # already exists
+            if __args_already_exists "${1:1}"; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: option name '${1}' already exists"
+                return 1
+            fi
+            is_flag=true
+            short_flags+=("${1:1}")
+        else
+            # multi argument name
+            if [ "$is_argument" = "true" ]; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: you can't have multi argument name"
+                return 1
+            fi
+            # empty argument name
+            if [ -z "$1" ]; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: name of argument is empty"
+                return 1
+            fi
+            # already exists
+            if __args_already_exists "$1"; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: argument name '${1}' already exists"
+                return 1
+            fi
+            is_argument=true
+            argument_name="$1"
+        fi
+        if [ "$is_argument" = "true" ] && [ "$is_flag" = "true" ]; then
+            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: you can't mixte argument and flag(s)"
+            return 1
+        fi
+        shift
+    done
+
+    if [ "$is_argument" = "true" ]; then
+        __ARGS_ARGUMENT_NAME+=("$argument_name")
+        __ARGS_ARGUMENT_HELP+=("$help")
+        __ARGS_ARGUMENT_DEFAULT+=("$default")
+        __ARGS_ARGUMENT_DEST+=("$dest")
+        __ARGS_ARGUMENT_REQUIRED+=("$required")
     else
-        __ARGS_OPTION_REQUIRED+=(false)
+        if [ "$action" = "store_false" ]; then
+            __ARGS_OPTION_TYPE+=("reverse_boolean")
+            __ARGS_OPTION_DEFAULT+=(true)
+        elif [ "$action" = "store_true" ]; then
+            __ARGS_OPTION_TYPE+=("boolean")
+            __ARGS_OPTION_DEFAULT+=(false)
+        else
+            __ARGS_OPTION_TYPE+=("option")
+            __ARGS_OPTION_DEFAULT+=("$default")
+        fi
+        if [ "${#short_flags[@]}" -ne 0 ]; then
+            __ARGS_OPTION_SHORT+=("${short_flags[0]}")
+        else
+            __ARGS_OPTION_SHORT+=("")
+        fi
+        if [ "${#long_flags[@]}" -ne 0 ]; then
+            __ARGS_OPTION_LONG+=("${long_flags[0]}")
+        else
+            __ARGS_OPTION_LONG+=("")
+        fi
+        __ARGS_OPTION_METAVAR+=("$metavar")
+        __ARGS_OPTION_HELP+=("$help")
+        __ARGS_OPTION_DEST+=("$dest")
+        __ARGS_OPTION_REQUIRED+=("$required")
     fi
 }
 
@@ -822,6 +741,9 @@ args_parse_arguments() {
         for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
             ARGS[${__ARGS_ARGUMENT_NAME[$i]}]="$1"
             shift
+            if [ $# -eq 0 ]; then
+                break
+            fi
         done
     fi
     if [ $# -ne 0 ]; then

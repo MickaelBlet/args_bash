@@ -19,20 +19,20 @@ args_set_description "example of description"
 args_set_epilog "example of epilog"
 
 args_add_argument \
-    --name="ARG1" \
-    --help="take the first argument" \
-    --dest="ARG1" \
-    --required="true"
-args_add_bool_option \
-    --short="c" \
-    --long="clear" \
+    --help "take the first argument" \
+    --dest "ARG1" \
+    --required \
+    -- "ARG1"
+args_add_argument \
     --help="clear the test directory" \
-    --dest="OPT_CLEAR"
-args_add_option \
-    --long="option" \
+    --action="store_true" \
+    --dest="OPT_CLEAR" \
+    -- "-c" "--clear"
+args_add_argument \
     --help="help of option" \
     --metavar="VALUE" \
-    --default="24"
+    --default="24" \
+    -- "--option"
 
 args_parse_arguments "$@"
 
@@ -72,74 +72,32 @@ $ ./example/quickstart.sh 42
 
 ### args_add_argument
 
-Add a positional argument
+Add a argument
 
 |option|description|
 |---|---|
+|--action|Action (store,store_true,store_false) (default:store)|
 |--default|Default value|
 |--dest|Destination variable|
 |--help|Usage helper|
-|--name|Name of argument|
-|--required|Is required if true|
-
-#### Example
-
-```bash
-args_add_argument --name="FOO" --help="help of FOO" --dest="FOO" --required="true"
-```
-
-### args_add_bool_option
-
-Add a boolean option
-
-|option|description|
-|---|---|
-|--dest|Destination variable|
-|--help|Usage helper|
-|--long|Long option name|
-|--short|Short option name|
-
-#### Example
-
-```bash
-args_add_bool_option --short="f" --long="foo" --help="help of foo" --dest="FOO"
-```
-
-### args_add_reverse_bool_option
-
-Add a reverse boolean option
-
-|option|description|
-|---|---|
-|--dest|Destination variable|
-|--help|Usage helper|
-|--long|Long option name|
-|--short|Short option name|
-
-#### Example
-
-```bash
-args_add_reverse_bool_option --short="f" --long="foo" --help="help of foo" --dest="FOO"
-```
-
-### args_add_option
-
-Add a option who take a argument
-
-|option|description|
-|---|---|
-|--default|Default value of option|
-|--dest|Destination variable|
-|--help|Usage helper|
-|--long|Long option name|
 |--metavar|Usage argument name (if not set use long/short name)|
-|--required|Is required if true|
-|--short|Short option name|
-
-#### Example
+|--required|Is required if present|
 
 ```bash
-args_add_option --short="f" --long="foo" --help="help of foo" --dest="FOO"
+args_add_argument [options] -- [name/flags...]
+```
+
+#### Examples
+
+```bash
+# positional argument
+args_add_argument --help="help of FOO" --dest="FOO" --required -- "FOO"
+# boolean optional argument
+args_add_argument --action="store_true" --help="help of foo" --dest="FOO" -- "-f" "--foo"
+# not boolean optional argument
+args_add_argument --action="store_false" --help="help of foo" --dest="FOO" -- "-f" "--foo"
+# optional argument
+args_add_argument --help="help of foo" --dest="FOO" -- "-f" "--foo"
 ```
 
 ### args_parse_arguments
