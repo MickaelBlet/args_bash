@@ -2,7 +2,7 @@
 # args.sh
 #
 # Licensed under the MIT License <http://opensource.org/licenses/MIT>.
-# Copyright (c) 2024 BLET Mickaël.
+# Copyright (c) 2024 BLET Mickael.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ __ARGS_USAGE=""
 __ARGS_DESCRIPTION=""
 __ARGS_EPILOG=""
 __ARGS_ALTERNATIVE=false
-__ARGS_USAGE_WIDTHS=(2 20 2 56)
+__ARGS_USAGE_WIDTHS=()
 
 __ARGS_ARGUMENT_NAME=()
 __ARGS_ARGUMENT_HELP=()
@@ -105,42 +105,33 @@ args_clean() {
     __ARGS_OPTION_DEFAULT=()
     __ARGS_OPTION_DEST=()
     __ARGS_OPTION_REQUIRED=()
+    return 0
 }
 
 __args_already_exists() {
     local argument_name
-    for argument_name in "${__ARGS_ARGUMENT_NAME[@]:-}"; do
+    for argument_name in "${__ARGS_ARGUMENT_NAME[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_0[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_1[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_2[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_3[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_4[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_5[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_6[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_7[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_8[@]:-}" \
+                         "${__ARGS_OPTION_SHORT_9[@]:-}" \
+                         "${__ARGS_OPTION_LONG_0[@]:-}" \
+                         "${__ARGS_OPTION_LONG_1[@]:-}" \
+                         "${__ARGS_OPTION_LONG_2[@]:-}" \
+                         "${__ARGS_OPTION_LONG_3[@]:-}" \
+                         "${__ARGS_OPTION_LONG_4[@]:-}" \
+                         "${__ARGS_OPTION_LONG_5[@]:-}" \
+                         "${__ARGS_OPTION_LONG_6[@]:-}" \
+                         "${__ARGS_OPTION_LONG_7[@]:-}" \
+                         "${__ARGS_OPTION_LONG_8[@]:-}" \
+                         "${__ARGS_OPTION_LONG_9[@]:-}"; do
         if [ "$1" = "$argument_name" ]; then
-            return 0;
-        fi
-    done
-
-    local option_name
-    for option_name in "${__ARGS_OPTION_SHORT_0[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_1[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_2[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_3[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_4[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_5[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_6[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_7[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_8[@]:-}" \
-                       "${__ARGS_OPTION_SHORT_9[@]:-}" ; do
-        if [ "$1" = "$option_name" ]; then
-            return 0;
-        fi
-    done
-    for option_name in "${__ARGS_OPTION_LONG_0[@]:-}" \
-                       "${__ARGS_OPTION_LONG_1[@]:-}" \
-                       "${__ARGS_OPTION_LONG_2[@]:-}" \
-                       "${__ARGS_OPTION_LONG_3[@]:-}" \
-                       "${__ARGS_OPTION_LONG_4[@]:-}" \
-                       "${__ARGS_OPTION_LONG_5[@]:-}" \
-                       "${__ARGS_OPTION_LONG_6[@]:-}" \
-                       "${__ARGS_OPTION_LONG_7[@]:-}" \
-                       "${__ARGS_OPTION_LONG_8[@]:-}" \
-                       "${__ARGS_OPTION_LONG_9[@]:-}" ; do
-        if [ "$1" = "$option_name" ]; then
             return 0;
         fi
     done
@@ -227,11 +218,13 @@ __args_swap_options() {
     __ARGS_OPTION_DEFAULT[$2]="$default"
     __ARGS_OPTION_DEST[$2]="$dest"
     __ARGS_OPTION_REQUIRED[$2]="$required"
+    return 0
 }
 
 # Sort by asc optional arguments
 __args_sort() {
-    local max="$((${#__ARGS_OPTION_ACTION[@]} - 1))"
+    local max
+    max="$((${#__ARGS_OPTION_ACTION[@]} - 1))"
     local i j
     while [ "$max" -gt 0 ]; do
         i=0
@@ -240,30 +233,27 @@ __args_sort() {
             if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_SHORT_0[$j]}" ]; then
                 if ! ${__ARGS_OPTION_REQUIRED[$i]} && ${__ARGS_OPTION_REQUIRED[$j]}; then
                     __args_swap_options "$i" "$j"
-                elif ! ${__ARGS_OPTION_REQUIRED[$i]} && [ "${__ARGS_OPTION_SHORT_0[$i]}" \> "${__ARGS_OPTION_SHORT_0[$j]}" ]; then
+                elif ! ${__ARGS_OPTION_REQUIRED[$i]} && [[ "${__ARGS_OPTION_SHORT_0[$i]}" > "${__ARGS_OPTION_SHORT_0[$j]}" ]]; then
                     __args_swap_options "$i" "$j"
                 fi
             elif [ -z "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -z "${__ARGS_OPTION_SHORT_0[$j]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$((i + 1))]}" ]; then
                 if ! ${__ARGS_OPTION_REQUIRED[$i]} && ${__ARGS_OPTION_REQUIRED[$j]}; then
                     __args_swap_options "$i" "$j"
-                elif ! ${__ARGS_OPTION_REQUIRED[$i]} && [ "${__ARGS_OPTION_LONG_0[$i]}" \> "${__ARGS_OPTION_LONG_0[$j]}" ]; then
+                elif ! ${__ARGS_OPTION_REQUIRED[$i]} && [[ "${__ARGS_OPTION_LONG_0[$i]}" > "${__ARGS_OPTION_LONG_0[$j]}" ]]; then
                     __args_swap_options "$i" "$j"
                 fi
             elif [ -z "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
                 __args_swap_options "$i" "$j"
             fi
             i=$((i + 1))
-            j=$((i + 1))
+            j=$((j + 1))
         done
         max=$((max - 1))
     done
+    return 0
 }
 
 # Set a usage description
-#   params:
-#     $*  Concat all arguments
-#   example:
-#     args_set_description "Your description " "message"
 args_set_description() {
     __ARGS_DESCRIPTION="$*"
 }
@@ -351,6 +341,7 @@ args_add_argument() {
         esac
     done
 
+    # bad format of action
     if [[ "$action" != "store" ]] && [[ "$action" != "store_true" ]] && [[ "$action" != "store_false" ]]; then
         >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: unknown action '$action'"
         return 1
@@ -362,12 +353,26 @@ args_add_argument() {
         return 1
     fi
 
-    # default and required
-    if [ -n "$default" ] && [ "$required" = "true" ]; then
-        >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--default' used with '--required'"
-        return 1
+    # store_true or store_false
+    if [[ "$action" != "store" ]]; then
+        # default
+        if [ -n "$default" ]; then
+            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--default' used with action '$action'"
+            return 1
+        fi
+        # required
+        if [ "$required" = "true" ]; then
+            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--required' used with action '$action'"
+            return 1
+        fi
+        # metavar
+        if [ -n "$metavar" ]; then
+            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--metavar' used with action '$action'"
+            return 1
+        fi
     fi
 
+    # not name or flags
     if [ $# -eq 0 ]; then
         >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: need a flag or argument name"
         return 1
@@ -428,21 +433,22 @@ args_add_argument() {
     done
 
     # sort flags
-    local max="$((${#long_flags[@]} - 1))"
+    local max
+    max="$((${#long_flags[@]} - 1))"
     local i j tmp
     while [ "$max" -gt 0 ]; do
         i=0
         j=1
         while [ "$i" -lt "$max" ]; do
             if [ -n "${long_flags[$i]}" ] && [ -n "${long_flags[$j]}" ]; then
-                if [ "${long_flags[$i]}" \> "${long_flags[$j]}" ]; then
+                if [[ "${long_flags[$i]}" > "${long_flags[$j]}" ]]; then
                     tmp="${long_flags[$i]}"
                     long_flags[$i]="${long_flags[$j]}"
                     long_flags[$j]="$tmp"
                 fi
             fi
             i=$((i + 1))
-            j=$((i + 1))
+            j=$((j + 1))
         done
         max=$((max - 1))
     done
@@ -452,14 +458,14 @@ args_add_argument() {
         j=1
         while [ "$i" -lt "$max" ]; do
             if [ -n "${short_flags[$i]}" ] && [ -n "${short_flags[$j]}" ]; then
-                if [ "${short_flags[$i]}" \> "${short_flags[$j]}" ]; then
+                if [[ "${short_flags[$i]}" > "${short_flags[$j]}" ]]; then
                     tmp="${short_flags[$i]}"
                     short_flags[$i]="${short_flags[$j]}"
                     short_flags[$j]="$tmp"
                 fi
             fi
             i=$((i + 1))
-            j=$((i + 1))
+            j=$((j + 1))
         done
         max=$((max - 1))
     done
@@ -500,12 +506,13 @@ args_add_argument() {
         else
             __ARGS_OPTION_DEFAULT+=("$default")
         fi
-        __ARGS_OPTION_ACTION+=($action)
+        __ARGS_OPTION_ACTION+=("$action")
         __ARGS_OPTION_METAVAR+=("$metavar")
         __ARGS_OPTION_HELP+=("$help")
         __ARGS_OPTION_DEST+=("$dest")
         __ARGS_OPTION_REQUIRED+=("$required")
     fi
+    return 0
 }
 
 # Show all values of arguments and options
@@ -513,8 +520,44 @@ args_debug_values() {
     # get column max of options
     local max_col=0
     local key
+    local value
+    local i
     local count
-    for key in "${__ARGS_ARGUMENT_NAME[@]}"; do
+    for key in "${__ARGS_ARGUMENT_NAME[@]:-}"; do
+        count=$((${#key}))
+        if [ $count -gt $max_col ]; then
+            max_col=$count
+        fi
+    done
+    for i in "${!__ARGS_OPTION_SHORT_0[@]}"; do
+        key=""
+        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
+            key+="-${__ARGS_OPTION_SHORT_0[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_1[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_1[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_2[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_2[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_3[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_3[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_4[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_4[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_5[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_5[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_6[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_6[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_7[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_7[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_8[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_8[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_9[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_9[$i]}"
+        fi
+        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
+            key+=", "
+        fi
+        if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
+            key+="--${__ARGS_OPTION_LONG_0[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_1[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_1[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_2[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_2[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_3[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_3[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_4[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_4[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_5[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_5[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_6[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_6[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_7[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_7[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_8[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_8[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_9[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_9[$i]}"
+        fi
         count=$((${#key}))
         if [ $count -gt $max_col ]; then
             max_col=$count
@@ -553,37 +596,43 @@ args_debug_values() {
         fi
     done
 
-    for key in "${__ARGS_ARGUMENT_NAME[@]}"; do
+    for key in "${__ARGS_ARGUMENT_NAME[@]:-}"; do
         printf -- "%-*s : %s\n" "$max_col" "$(printf -- "%s" "$key")" "${ARGS["$key"]:-}"
     done
-    for key in "${__ARGS_OPTION_SHORT_0[@]:-}" \
-               "${__ARGS_OPTION_SHORT_1[@]:-}" \
-               "${__ARGS_OPTION_SHORT_2[@]:-}" \
-               "${__ARGS_OPTION_SHORT_3[@]:-}" \
-               "${__ARGS_OPTION_SHORT_4[@]:-}" \
-               "${__ARGS_OPTION_SHORT_5[@]:-}" \
-               "${__ARGS_OPTION_SHORT_6[@]:-}" \
-               "${__ARGS_OPTION_SHORT_7[@]:-}" \
-               "${__ARGS_OPTION_SHORT_8[@]:-}" \
-               "${__ARGS_OPTION_SHORT_9[@]:-}" ; do
-        if [ -n "$key" ]; then
-            printf -- "%-*s : %s\n" "$max_col" "-$key" "${ARGS["$key"]:-}"
+    for i in "${!__ARGS_OPTION_SHORT_0[@]}"; do
+        key=""
+        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
+            value="${ARGS["${__ARGS_OPTION_SHORT_0[$i]}"]:-}"
+            key+="-${__ARGS_OPTION_SHORT_0[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_1[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_1[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_2[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_2[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_3[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_3[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_4[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_4[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_5[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_5[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_6[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_6[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_7[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_7[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_8[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_8[$i]}"
+            [ -n "${__ARGS_OPTION_SHORT_9[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_9[$i]}"
         fi
-    done
-    for key in "${__ARGS_OPTION_LONG_0[@]:-}" \
-               "${__ARGS_OPTION_LONG_1[@]:-}" \
-               "${__ARGS_OPTION_LONG_2[@]:-}" \
-               "${__ARGS_OPTION_LONG_3[@]:-}" \
-               "${__ARGS_OPTION_LONG_4[@]:-}" \
-               "${__ARGS_OPTION_LONG_5[@]:-}" \
-               "${__ARGS_OPTION_LONG_6[@]:-}" \
-               "${__ARGS_OPTION_LONG_7[@]:-}" \
-               "${__ARGS_OPTION_LONG_8[@]:-}" \
-               "${__ARGS_OPTION_LONG_9[@]:-}" ; do
-        if [ -n "$key" ]; then
-            printf -- "%-*s : %s\n" "$max_col" "--$key" "${ARGS["$key"]:-}"
+        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
+            key+=", "
         fi
+        if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
+            value="${ARGS["${__ARGS_OPTION_LONG_0[$i]}"]:-}"
+            key+="--${__ARGS_OPTION_LONG_0[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_1[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_1[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_2[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_2[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_3[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_3[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_4[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_4[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_5[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_5[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_6[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_6[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_7[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_7[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_8[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_8[$i]}"
+            [ -n "${__ARGS_OPTION_LONG_9[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_9[$i]}"
+        fi
+        printf -- "%-*s : %s\n" "$max_col" "$key" "$value"
     done
+    return 0
 }
 
 # Show/Generate usage message
@@ -634,8 +683,10 @@ args_usage() {
             if [ "$((current_col + ${#option}))" -gt "$max_col" ]; then
                 has_max_col=true
                 str+=$'\n'
-                for (( j = 0; j < "${usage_basename_length}"; j++ )); do
+                j=0
+                while [ "$j" -lt "${usage_basename_length}" ]; do
                     str+=" "
+                    j=$((j + 1))
                 done
                 current_col="$usage_basename_length"
             fi
@@ -645,13 +696,17 @@ args_usage() {
         if [ "${#__ARGS_ARGUMENT_NAME[@]}" -ne 0 ]; then
             if $has_max_col || [ "$((current_col + 3))" -gt "$max_col" ]; then
                 str+=$'\n'
-                for (( j = 0; j < "${usage_basename_length}"; j++ )); do
+                j=0
+                while [ "$j" -lt "${usage_basename_length}" ]; do
                     str+=" "
+                    j=$((j + 1))
                 done
                 str+=" --"
                 str+=$'\n'
-                for (( j = 0; j < "${usage_basename_length}"; j++ )); do
+                j=0
+                while [ "$j" -lt "${usage_basename_length}" ]; do
                     str+=" "
+                    j=$((j + 1))
                 done
                 current_col="$usage_basename_length"
             else
@@ -670,8 +725,10 @@ args_usage() {
             if [ "$((current_col + ${#option}))" -gt "$max_col" ]; then
                 has_max_col=true
                 str+=$'\n'
-                for (( j = 0; j < "${usage_basename_length}"; j++ )); do
+                j=0
+                while [ "$j" -lt "${usage_basename_length}" ]; do
                     str+=" "
+                    j=$((j + 1))
                 done
                 current_col="$usage_basename_length"
             fi
@@ -690,8 +747,10 @@ args_usage() {
             str+=$'\n'
         fi
         for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
-            for (( j = 0; j < "${__ARGS_USAGE_WIDTHS[0]}"; j++ )); do
+            j=0
+            while [ "$j" -lt "${__ARGS_USAGE_WIDTHS[0]}" ]; do
                 str+=" "
+                j=$((j + 1))
             done
             local option=""
             option+="${__ARGS_ARGUMENT_NAME[$i]}"
@@ -699,12 +758,16 @@ args_usage() {
             if [ -n "${__ARGS_ARGUMENT_HELP[$i]}" ]; then
                 if [ "${#option}" -gt "${__ARGS_USAGE_WIDTHS[1]}" ]; then
                     str+=$'\n'
-                    for (( j = 0; j < "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"; j++ )); do
+                    j=0
+                    while [ "$j" -lt "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))" ]; do
                         str+=" "
+                        j=$((j + 1))
                     done
                 else
-                    for (( j = 0; j < "$(( __ARGS_USAGE_WIDTHS[1] - ${#option} + __ARGS_USAGE_WIDTHS[2] - 1 ))"; j++ )); do
+                    j=0
+                    while [ "$j" -lt "$(( __ARGS_USAGE_WIDTHS[1] - ${#option} + __ARGS_USAGE_WIDTHS[2] - 1 ))" ]; do
                         str+=" "
+                        j=$((j + 1))
                     done
                 fi
                 current_col="$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"
@@ -712,8 +775,10 @@ args_usage() {
                 for word in ${__ARGS_ARGUMENT_HELP[$i]}; do
                     if [ "$(( current_col + ${#word} + 1 ))" -gt "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] + __ARGS_USAGE_WIDTHS[3] ))" ]; then
                         str+=$'\n'
-                        for (( j = 0; j < "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"; j++ )); do
+                        j=0
+                        while [ "$j" -lt "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))" ]; do
                             str+=" "
+                            j=$((j + 1))
                         done
                         current_col="$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"
                     fi
@@ -729,8 +794,10 @@ args_usage() {
             str+=$'\n'
         fi
         for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-            for (( j = 0; j < "${__ARGS_USAGE_WIDTHS[0]}"; j++ )); do
+            j=0
+            while [ "$j" -lt "${__ARGS_USAGE_WIDTHS[0]}" ]; do
                 str+=" "
+                j=$((j + 1))
             done
             local option=""
             if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
@@ -776,12 +843,16 @@ args_usage() {
             if [ -n "${__ARGS_OPTION_HELP[$i]}" ]; then
                 if [ "${#option}" -gt "${__ARGS_USAGE_WIDTHS[1]}" ]; then
                     str+=$'\n'
-                    for (( j = 0; j < "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"; j++ )); do
+                    j=0
+                    while [ "$j" -lt "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))" ]; do
                         str+=" "
+                        j=$((j + 1))
                     done
                 else
-                    for (( j = 0; j < "$(( __ARGS_USAGE_WIDTHS[1] - ${#option} + __ARGS_USAGE_WIDTHS[2] - 1 ))"; j++ )); do
+                    j=0
+                    while [ "$j" -lt "$(( __ARGS_USAGE_WIDTHS[1] - ${#option} + __ARGS_USAGE_WIDTHS[2] - 1 ))" ]; do
                         str+=" "
+                        j=$((j + 1))
                     done
                 fi
                 current_col="$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"
@@ -789,8 +860,10 @@ args_usage() {
                 for word in ${__ARGS_OPTION_HELP[$i]}; do
                     if [ "$(( current_col + ${#word} + 1 ))" -gt "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] + __ARGS_USAGE_WIDTHS[3] ))" ]; then
                         str+=$'\n'
-                        for (( j = 0; j < "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"; j++ )); do
+                        j=0
+                        while [ "$j" -lt "$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))" ]; do
                             str+=" "
+                            j=$((j + 1))
                         done
                         current_col="$(( __ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1 ))"
                     fi
@@ -807,6 +880,7 @@ args_usage() {
         fi
         echo -n "$str"
     fi
+    return 0
 }
 
 # Use after args_add_argument functions
@@ -899,7 +973,7 @@ args_parse_arguments() {
         for i in "${!help_options[@]}"; do
             if [ "$1" = "${help_options[i]}" ]; then
                 args_usage "$binary_name"
-                return 1
+                return 64
             fi
         done
         # Get options
@@ -1055,6 +1129,7 @@ args_parse_arguments() {
             declare -g "${__ARGS_ARGUMENT_DEST[$i]}=${ARGS[${__ARGS_ARGUMENT_NAME[$i]}]:-}"
         fi
     done
+    return 0
 }
 
 # Clean argparser global vairables at source
