@@ -8,7 +8,6 @@
 |__ARGS_USAGE|String of custom usage message|
 |__ARGS_DESCRIPTION|String of usage description|
 |__ARGS_EPILOG|String of usage epilog|
-|__ARGS_ALTERNATIVE|Boolean of alternative mode for getopt at [args_parse_arguments](../README.md#args_parse_arguments)|
 |__ARGS_USAGE_WIDTHS|Array[4] of sizes for print usage message|
 |__ARGS_ARGUMENT_NAME|Array of name of positional arguments|
 |__ARGS_ARGUMENT_HELP|Array of help of positional arguments|

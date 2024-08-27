@@ -5,8 +5,6 @@ Inspired by the Python library [argparse](https://python.readthedocs.io/en/lates
 Compatible with **bash** version >= **4.2.0**.  
 Documentations available at [documentations](#documentations).
 
-Use [getopt](https://www.man7.org/linux/man-pages/man1/getopt.1.html) for parse arguments/options.
-
 ## Quikstart
 
 ```bash
@@ -88,7 +86,6 @@ Hello world
 |[args_set_epilog](docs/functions.md#args_set_epilog)|Set a epilog description|
 |[args_set_usage_width](docs/functions.md#args_set_usage_width)|Set the widths of usage message|
 |[args_set_usage](docs/functions.md#args_set_usage)|Set a full usage message|
-|[args_set_alternative](docs/functions.md#args_set_alternative)|Set alternative mode for [getopt](https://www.man7.org/linux/man-pages/man1/getopt.1.html)|
 |[args_usage](docs/functions.md#args_usage)|Show/Generate usage message|
 |[args_clean](docs/functions.md#args_clean)|Clean all map and array for recalled|
 |[args_debug_values](docs/functions.md#args_debug_values)|Show all values of arguments and options|
