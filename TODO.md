@@ -6,3 +6,4 @@
 - [x] Add count action
 - [ ] Add nargs option for add_argument
 - [ ] Add append action
+- [ ] Add choices option for add_argument

@@ -1,6 +1,6 @@
 # Args
 
-Parse and stock arguments/options from `argv`.  
+Parse and store arguments/options from `argv` natively on **bash**.  
 Inspired by the Python library [argparse](https://python.readthedocs.io/en/latest/library/argparse.html).  
 Compatible with **bash** version >= **4.2.0**.  
 Documentations available at [documentations](#documentations).
