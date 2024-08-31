@@ -24,254 +24,172 @@
 #
 
 declare -A ARGS
-
-# options
-__ARGS_USAGE=""
-__ARGS_DESCRIPTION=""
-__ARGS_EPILOG=""
-__ARGS_USAGE_WIDTHS=()
-
-__ARGS_ARGUMENT_NAME=()
-__ARGS_ARGUMENT_HELP=()
-__ARGS_ARGUMENT_DEFAULT=()
-__ARGS_ARGUMENT_DEST=()
-__ARGS_ARGUMENT_REQUIRED=()
-__ARGS_ARGUMENT_ISEXSISTS=()
-__ARGS_ARGUMENT_COUNT=()
-__ARGS_ARGUMENT_CHOICES=()
-
-__ARGS_OPTION_ACTION=()
-__ARGS_OPTION_SHORT_0=()
-__ARGS_OPTION_SHORT_1=()
-__ARGS_OPTION_SHORT_2=()
-__ARGS_OPTION_SHORT_3=()
-__ARGS_OPTION_SHORT_4=()
-__ARGS_OPTION_SHORT_5=()
-__ARGS_OPTION_SHORT_6=()
-__ARGS_OPTION_SHORT_7=()
-__ARGS_OPTION_SHORT_8=()
-__ARGS_OPTION_SHORT_9=()
-__ARGS_OPTION_LONG_0=()
-__ARGS_OPTION_LONG_1=()
-__ARGS_OPTION_LONG_2=()
-__ARGS_OPTION_LONG_3=()
-__ARGS_OPTION_LONG_4=()
-__ARGS_OPTION_LONG_5=()
-__ARGS_OPTION_LONG_6=()
-__ARGS_OPTION_LONG_7=()
-__ARGS_OPTION_LONG_8=()
-__ARGS_OPTION_LONG_9=()
-__ARGS_OPTION_METAVAR=()
-__ARGS_OPTION_HELP=()
-__ARGS_OPTION_DEFAULT=()
-__ARGS_OPTION_DEST=()
-__ARGS_OPTION_REQUIRED=()
-__ARGS_OPTION_ISEXSISTS=()
-__ARGS_OPTION_COUNT=()
-__ARGS_OPTION_CHOICES=()
-__ARGS_OPTION_NARGS=()
+declare -A __ARGS
 
 # Clean all map and array for recalled
 args_clean() {
     ARGS=()
+    __ARGS=()
 
-    __ARGS_USAGE=""
-    __ARGS_DESCRIPTION=""
-    __ARGS_EPILOG=""
-    __ARGS_USAGE_WIDTHS=(2 20 2 56)
+    __ARGS[PROG_NAME]=""
+    __ARGS[USAGE]=""
+    __ARGS[DESCRIPTION]=""
+    __ARGS[EPILOG]=""
+    __ARGS[USAGE_WIDTH_PADDING]=2
+    __ARGS[USAGE_WIDTH_ARGUMENT]=20
+    __ARGS[USAGE_WIDTH_SEPARATOR]=2
+    __ARGS[USAGE_WIDTH_HELP]=56
 
-    __ARGS_ARGUMENT_NAME=()
-    __ARGS_ARGUMENT_HELP=()
-    __ARGS_ARGUMENT_DEFAULT=()
-    __ARGS_ARGUMENT_DEST=()
-    __ARGS_ARGUMENT_REQUIRED=()
-    __ARGS_ARGUMENT_ISEXSISTS=()
-    __ARGS_ARGUMENT_COUNT=()
-    __ARGS_ARGUMENT_CHOICES=()
-
-    __ARGS_OPTION_ACTION=()
-    __ARGS_OPTION_SHORT_0=()
-    __ARGS_OPTION_SHORT_1=()
-    __ARGS_OPTION_SHORT_2=()
-    __ARGS_OPTION_SHORT_3=()
-    __ARGS_OPTION_SHORT_4=()
-    __ARGS_OPTION_SHORT_5=()
-    __ARGS_OPTION_SHORT_6=()
-    __ARGS_OPTION_SHORT_7=()
-    __ARGS_OPTION_SHORT_8=()
-    __ARGS_OPTION_SHORT_9=()
-    __ARGS_OPTION_LONG_0=()
-    __ARGS_OPTION_LONG_1=()
-    __ARGS_OPTION_LONG_2=()
-    __ARGS_OPTION_LONG_3=()
-    __ARGS_OPTION_LONG_4=()
-    __ARGS_OPTION_LONG_5=()
-    __ARGS_OPTION_LONG_6=()
-    __ARGS_OPTION_LONG_7=()
-    __ARGS_OPTION_LONG_8=()
-    __ARGS_OPTION_LONG_9=()
-    __ARGS_OPTION_METAVAR=()
-    __ARGS_OPTION_HELP=()
-    __ARGS_OPTION_DEFAULT=()
-    __ARGS_OPTION_DEST=()
-    __ARGS_OPTION_REQUIRED=()
-    __ARGS_OPTION_ISEXSISTS=()
-    __ARGS_OPTION_COUNT=()
-    __ARGS_OPTION_CHOICES=()
-    __ARGS_OPTION_NARGS=()
-
+    # positional argument
+    __ARGS[argument.size]=0
+    # optional argument
+    __ARGS[option.size]=0
     return 0
 }
 
 __args_already_exists() {
-    local argument_name
-    for argument_name in "${__ARGS_ARGUMENT_NAME[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_0[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_1[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_2[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_3[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_4[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_5[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_6[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_7[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_8[@]:-}" \
-                         "${__ARGS_OPTION_SHORT_9[@]:-}" \
-                         "${__ARGS_OPTION_LONG_0[@]:-}" \
-                         "${__ARGS_OPTION_LONG_1[@]:-}" \
-                         "${__ARGS_OPTION_LONG_2[@]:-}" \
-                         "${__ARGS_OPTION_LONG_3[@]:-}" \
-                         "${__ARGS_OPTION_LONG_4[@]:-}" \
-                         "${__ARGS_OPTION_LONG_5[@]:-}" \
-                         "${__ARGS_OPTION_LONG_6[@]:-}" \
-                         "${__ARGS_OPTION_LONG_7[@]:-}" \
-                         "${__ARGS_OPTION_LONG_8[@]:-}" \
-                         "${__ARGS_OPTION_LONG_9[@]:-}"; do
-        if [ "$1" = "$argument_name" ]; then
+    local type
+    local i=0
+    local j=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        if [ "$1" = "${__ARGS[argument.${i}.name]}" ]; then
             return 0;
         fi
+        i=$((i + 1))
+    done
+    i=0
+    while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+        for type in "short" "long"; do
+            j=0
+            while [ "$j" -lt "${__ARGS[option.${i}.${type}.size]}" ]; do
+                if [ "$1" = "${__ARGS[option.${i}.${type}.${j}]}" ]; then
+                    return 0;
+                fi
+                j=$((j + 1))
+            done
+        done
+        i=$((i + 1))
     done
     return 1;
 }
 
-# Sort by asc optional arguments
+# Swap options
 __args_swap_options() {
-    local action="${__ARGS_OPTION_ACTION[$1]}"
-    local short_0="${__ARGS_OPTION_SHORT_0[$1]}"
-    local short_1="${__ARGS_OPTION_SHORT_1[$1]}"
-    local short_2="${__ARGS_OPTION_SHORT_2[$1]}"
-    local short_3="${__ARGS_OPTION_SHORT_3[$1]}"
-    local short_4="${__ARGS_OPTION_SHORT_4[$1]}"
-    local short_5="${__ARGS_OPTION_SHORT_5[$1]}"
-    local short_6="${__ARGS_OPTION_SHORT_6[$1]}"
-    local short_7="${__ARGS_OPTION_SHORT_7[$1]}"
-    local short_8="${__ARGS_OPTION_SHORT_8[$1]}"
-    local short_9="${__ARGS_OPTION_SHORT_9[$1]}"
-    local long_0="${__ARGS_OPTION_LONG_0[$1]}"
-    local long_1="${__ARGS_OPTION_LONG_1[$1]}"
-    local long_2="${__ARGS_OPTION_LONG_2[$1]}"
-    local long_3="${__ARGS_OPTION_LONG_3[$1]}"
-    local long_4="${__ARGS_OPTION_LONG_4[$1]}"
-    local long_5="${__ARGS_OPTION_LONG_5[$1]}"
-    local long_6="${__ARGS_OPTION_LONG_6[$1]}"
-    local long_7="${__ARGS_OPTION_LONG_7[$1]}"
-    local long_8="${__ARGS_OPTION_LONG_8[$1]}"
-    local long_9="${__ARGS_OPTION_LONG_9[$1]}"
-    local metavar="${__ARGS_OPTION_METAVAR[$1]}"
-    local help="${__ARGS_OPTION_HELP[$1]}"
-    local default="${__ARGS_OPTION_DEFAULT[$1]}"
-    local dest="${__ARGS_OPTION_DEST[$1]}"
-    local required="${__ARGS_OPTION_REQUIRED[$1]}"
-    local action="${__ARGS_OPTION_ACTION[$1]}"
-    local isexists="${__ARGS_OPTION_ISEXSISTS[$1]}"
-    local count="${__ARGS_OPTION_COUNT[$1]}"
-    local choices="${__ARGS_OPTION_CHOICES[$1]}"
-    local nargs="${__ARGS_OPTION_NARGS[$1]}"
+    local i
+    local action
+    local metavar
+    local help
+    local default
+    local dest
+    local required
+    local action
+    local exists
+    local count
+    local choices
+    local nargs
+    local shorts
+    local longs
+    shorts=()
+    longs=()
 
-    __ARGS_OPTION_ACTION[$1]="${__ARGS_OPTION_ACTION[$2]}"
-    __ARGS_OPTION_SHORT_0[$1]="${__ARGS_OPTION_SHORT_0[$2]}"
-    __ARGS_OPTION_SHORT_1[$1]="${__ARGS_OPTION_SHORT_1[$2]}"
-    __ARGS_OPTION_SHORT_2[$1]="${__ARGS_OPTION_SHORT_2[$2]}"
-    __ARGS_OPTION_SHORT_3[$1]="${__ARGS_OPTION_SHORT_3[$2]}"
-    __ARGS_OPTION_SHORT_4[$1]="${__ARGS_OPTION_SHORT_4[$2]}"
-    __ARGS_OPTION_SHORT_5[$1]="${__ARGS_OPTION_SHORT_5[$2]}"
-    __ARGS_OPTION_SHORT_6[$1]="${__ARGS_OPTION_SHORT_6[$2]}"
-    __ARGS_OPTION_SHORT_7[$1]="${__ARGS_OPTION_SHORT_7[$2]}"
-    __ARGS_OPTION_SHORT_8[$1]="${__ARGS_OPTION_SHORT_8[$2]}"
-    __ARGS_OPTION_SHORT_9[$1]="${__ARGS_OPTION_SHORT_9[$2]}"
-    __ARGS_OPTION_LONG_0[$1]="${__ARGS_OPTION_LONG_0[$2]}"
-    __ARGS_OPTION_LONG_1[$1]="${__ARGS_OPTION_LONG_1[$2]}"
-    __ARGS_OPTION_LONG_2[$1]="${__ARGS_OPTION_LONG_2[$2]}"
-    __ARGS_OPTION_LONG_3[$1]="${__ARGS_OPTION_LONG_3[$2]}"
-    __ARGS_OPTION_LONG_4[$1]="${__ARGS_OPTION_LONG_4[$2]}"
-    __ARGS_OPTION_LONG_5[$1]="${__ARGS_OPTION_LONG_5[$2]}"
-    __ARGS_OPTION_LONG_6[$1]="${__ARGS_OPTION_LONG_6[$2]}"
-    __ARGS_OPTION_LONG_7[$1]="${__ARGS_OPTION_LONG_7[$2]}"
-    __ARGS_OPTION_LONG_8[$1]="${__ARGS_OPTION_LONG_8[$2]}"
-    __ARGS_OPTION_LONG_9[$1]="${__ARGS_OPTION_LONG_9[$2]}"
-    __ARGS_OPTION_METAVAR[$1]="${__ARGS_OPTION_METAVAR[$2]}"
-    __ARGS_OPTION_HELP[$1]="${__ARGS_OPTION_HELP[$2]}"
-    __ARGS_OPTION_DEFAULT[$1]="${__ARGS_OPTION_DEFAULT[$2]}"
-    __ARGS_OPTION_DEST[$1]="${__ARGS_OPTION_DEST[$2]}"
-    __ARGS_OPTION_REQUIRED[$1]="${__ARGS_OPTION_REQUIRED[$2]}"
-    __ARGS_OPTION_ISEXSISTS[$1]="${__ARGS_OPTION_ISEXSISTS[$2]}"
-    __ARGS_OPTION_COUNT[$1]="${__ARGS_OPTION_COUNT[$2]}"
-    __ARGS_OPTION_CHOICES[$1]="${__ARGS_OPTION_CHOICES[$2]}"
-    __ARGS_OPTION_NARGS[$1]="${__ARGS_OPTION_NARGS[$2]}"
+    # get parameters of option 1
+    action="${__ARGS[option.${1}.action]}"
+    metavar="${__ARGS[option.${1}.metavar]}"
+    help="${__ARGS[option.${1}.help]}"
+    default="${__ARGS[option.${1}.default]}"
+    dest="${__ARGS[option.${1}.dest]}"
+    required="${__ARGS[option.${1}.required]}"
+    action="${__ARGS[option.${1}.action]}"
+    exists="${__ARGS[option.${1}.exists]}"
+    count="${__ARGS[option.${1}.count]}"
+    choices="${__ARGS[option.${1}.choices]}"
+    nargs="${__ARGS[option.${1}.nargs]}"
+    i=0
+    while [ "$i" -lt "${__ARGS[option.${1}.short.size]}" ]; do
+        shorts+=("${__ARGS[option.${1}.short.${i}]}")
+        i=$((i + 1))
+    done
+    i=0
+    while [ "$i" -lt "${__ARGS[option.${1}.long.size]}" ]; do
+        longs+=("${__ARGS[option.${1}.long.${i}]}")
+        i=$((i + 1))
+    done
 
-    __ARGS_OPTION_ACTION[$2]="$action"
-    __ARGS_OPTION_SHORT_0[$2]="$short_0"
-    __ARGS_OPTION_SHORT_1[$2]="$short_1"
-    __ARGS_OPTION_SHORT_2[$2]="$short_2"
-    __ARGS_OPTION_SHORT_3[$2]="$short_3"
-    __ARGS_OPTION_SHORT_4[$2]="$short_4"
-    __ARGS_OPTION_SHORT_5[$2]="$short_5"
-    __ARGS_OPTION_SHORT_6[$2]="$short_6"
-    __ARGS_OPTION_SHORT_7[$2]="$short_7"
-    __ARGS_OPTION_SHORT_8[$2]="$short_8"
-    __ARGS_OPTION_SHORT_9[$2]="$short_9"
-    __ARGS_OPTION_LONG_0[$2]="$long_0"
-    __ARGS_OPTION_LONG_1[$2]="$long_1"
-    __ARGS_OPTION_LONG_2[$2]="$long_2"
-    __ARGS_OPTION_LONG_3[$2]="$long_3"
-    __ARGS_OPTION_LONG_4[$2]="$long_4"
-    __ARGS_OPTION_LONG_5[$2]="$long_5"
-    __ARGS_OPTION_LONG_6[$2]="$long_6"
-    __ARGS_OPTION_LONG_7[$2]="$long_7"
-    __ARGS_OPTION_LONG_8[$2]="$long_8"
-    __ARGS_OPTION_LONG_9[$2]="$long_9"
-    __ARGS_OPTION_METAVAR[$2]="$metavar"
-    __ARGS_OPTION_HELP[$2]="$help"
-    __ARGS_OPTION_DEFAULT[$2]="$default"
-    __ARGS_OPTION_DEST[$2]="$dest"
-    __ARGS_OPTION_REQUIRED[$2]="$required"
-    __ARGS_OPTION_ISEXSISTS[$2]="$isexists"
-    __ARGS_OPTION_COUNT[$2]="$count"
-    __ARGS_OPTION_CHOICES[$2]="$choices"
-    __ARGS_OPTION_NARGS[$2]="$nargs"
+    __ARGS[option.${1}.action]="${__ARGS[option.${2}.action]}"
+    __ARGS[option.${1}.metavar]="${__ARGS[option.${2}.metavar]}"
+    __ARGS[option.${1}.help]="${__ARGS[option.${2}.help]}"
+    __ARGS[option.${1}.default]="${__ARGS[option.${2}.default]}"
+    __ARGS[option.${1}.dest]="${__ARGS[option.${2}.dest]}"
+    __ARGS[option.${1}.required]="${__ARGS[option.${2}.required]}"
+    __ARGS[option.${1}.action]="${__ARGS[option.${2}.action]}"
+    __ARGS[option.${1}.exists]="${__ARGS[option.${2}.exists]}"
+    __ARGS[option.${1}.count]="${__ARGS[option.${2}.count]}"
+    __ARGS[option.${1}.choices]="${__ARGS[option.${2}.choices]}"
+    __ARGS[option.${1}.nargs]="${__ARGS[option.${2}.nargs]}"
+    i=0
+    while [ "$i" -lt "${__ARGS[option.${2}.short.size]}" ]; do
+        __ARGS[option.${1}.short.${i}]="${__ARGS[option.${2}.short.${i}]}"
+        i=$((i + 1))
+    done
+    __ARGS[option.${1}.short.size]="${__ARGS[option.${2}.short.size]}"
+    i=0
+    while [ "$i" -lt "${__ARGS[option.${2}.long.size]}" ]; do
+        __ARGS[option.${1}.long.${i}]="${__ARGS[option.${2}.long.${i}]}"
+        i=$((i + 1))
+    done
+    __ARGS[option.${1}.long.size]="${__ARGS[option.${2}.long.size]}"
+
+    __ARGS[option.${2}.action]="$action"
+    __ARGS[option.${2}.metavar]="$metavar"
+    __ARGS[option.${2}.help]="$help"
+    __ARGS[option.${2}.default]="$default"
+    __ARGS[option.${2}.dest]="$dest"
+    __ARGS[option.${2}.required]="$required"
+    __ARGS[option.${2}.action]="$action"
+    __ARGS[option.${2}.exists]="$exists"
+    __ARGS[option.${2}.count]="$count"
+    __ARGS[option.${2}.choices]="$choices"
+    __ARGS[option.${2}.nargs]="$nargs"
+    for i in "${!shorts[@]}"; do
+        __ARGS[option.${2}.short.${i}]="${shorts[$i]}"
+    done
+    __ARGS[option.${2}.short.size]="${#shorts[@]}"
+    for i in "${!longs[@]}"; do
+        __ARGS[option.${2}.long.${i}]="${longs[$i]}"
+    done
+    __ARGS[option.${2}.long.size]="${#longs[@]}"
     return 0
 }
 
 # Sort by asc optional arguments
 __args_sort() {
-    local max="$((${#__ARGS_OPTION_ACTION[@]} - 1))"
+    local max="$((${__ARGS[option.size]} - 1))"
     local i j
     while [ "$max" -gt 0 ]; do
         i=0
         j=1
         while [ "$i" -lt "$max" ]; do
-            if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_SHORT_0[$j]}" ]; then
-                if ! ${__ARGS_OPTION_REQUIRED[$i]} && ${__ARGS_OPTION_REQUIRED[$j]}; then
+            if [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && \
+               [ "${__ARGS[option.${j}.short.size]}" -ne 0 ]; then
+                if [ "${__ARGS[option.${i}.required]}" = "false" ] && \
+                   [ "${__ARGS[option.${j}.required]}" = "true" ]; then
                     __args_swap_options "$i" "$j"
-                elif ! ${__ARGS_OPTION_REQUIRED[$i]} && [[ "${__ARGS_OPTION_SHORT_0[$i]}" > "${__ARGS_OPTION_SHORT_0[$j]}" ]]; then
-                    __args_swap_options "$i" "$j"
-                fi
-            elif [ -z "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -z "${__ARGS_OPTION_SHORT_0[$j]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$((i + 1))]}" ]; then
-                if ! ${__ARGS_OPTION_REQUIRED[$i]} && ${__ARGS_OPTION_REQUIRED[$j]}; then
-                    __args_swap_options "$i" "$j"
-                elif ! ${__ARGS_OPTION_REQUIRED[$i]} && [[ "${__ARGS_OPTION_LONG_0[$i]}" > "${__ARGS_OPTION_LONG_0[$j]}" ]]; then
+                elif [ "${__ARGS[option.${i}.required]}" = "false" ] && \
+                     [[ "${__ARGS[option.${i}.short.0]}" > "${__ARGS[option.${j}.short.0]}" ]]; then
                     __args_swap_options "$i" "$j"
                 fi
-            elif [ -z "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
+            elif [ "${__ARGS[option.${i}.short.size]}" -eq 0 ]  && \
+                 [ "${__ARGS[option.${j}.short.size]}" -eq 0 ]  && \
+                 [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && \
+                 [ "${__ARGS[option.${j}.long.size]}" -ne 0 ]; then
+                if [ "${__ARGS[option.${i}.required]}" = "false" ] && \
+                   [ "${__ARGS[option.${j}.required]}" = "true" ]; then
+                    __args_swap_options "$i" "$j"
+                elif [ "${__ARGS[option.${i}.required]}" = "false" ] && \
+                     [[ "${__ARGS[option.${i}.long.0]}" > "${__ARGS[option.${j}.long.0]}" ]]; then
+                    __args_swap_options "$i" "$j"
+                fi
+            elif [ "${__ARGS[option.${i}.short.size]}" -eq 0 ]; then
                 __args_swap_options "$i" "$j"
             fi
             i=$((i + 1))
@@ -282,29 +200,94 @@ __args_sort() {
     return 0
 }
 
+__args_parse_option_is_value() {
+    local index="$1"
+    local value="$2"
+    local type
+    local name
+    local i
+    for type in "short" "long"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.${index}.${type}.size]}" ]; do
+            [ "short" = "$type" ] && name="-"
+            [ "long" = "$type" ] && name="--"
+            name+="${__ARGS[option.${index}.${type}.${i}]}"
+            if [ "$value" = "$name" ]; then
+                return 0
+            fi
+            i=$((i + 1))
+        done
+    done
+    return 1
+}
+
+__args_parse_option_is_assign_value() {
+    local index="$1"
+    local value="$2"
+    local type
+    local name
+    local i
+    for type in "short" "long"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.${index}.${type}.size]}" ]; do
+            [ "short" = "$type" ] && name="-"
+            [ "long" = "$type" ] && name="--"
+            name+="${__ARGS[option.${index}.${type}.${i}]}"
+            if [[ "$value" = "$name="* ]]; then
+                return 0
+            fi
+            i=$((i + 1))
+        done
+    done
+    return 1
+}
+
+__args_parse_option_is_multi_short_value() {
+    local index="$1"
+    local value="$2"
+    local name
+    local i
+    i=0
+    while [ "$i" -lt "${__ARGS[option.${index}.short.size]}" ]; do
+        name+="${__ARGS[option.${index}.short.${i}]}"
+        if [[ "$value" = "-$name"* ]]; then
+            return 0
+        fi
+        i=$((i + 1))
+    done
+    return 1
+}
+
+__args_parse_option_on_multi_short_value() {
+    local index="$1"
+    local value="$2"
+    local name
+    local i
+    i=0
+    while [ "$i" -lt "${__ARGS[option.${index}.short.size]}" ]; do
+        name+="${__ARGS[option.${index}.short.${i}]}"
+        if [[ "$value" = "$name"* ]]; then
+            return 0
+        fi
+        i=$((i + 1))
+    done
+    return 1
+}
+
 __args_parse_assign_option_value() {
     local index="$1"
     local value="$2"
-    [ -n "${__ARGS_OPTION_SHORT_0[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_0[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_1[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_1[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_2[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_2[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_3[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_3[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_4[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_4[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_5[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_5[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_6[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_6[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_7[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_7[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_8[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_8[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_9[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_9[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_0[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_0[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_1[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_1[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_2[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_2[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_3[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_3[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_4[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_4[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_5[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_5[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_6[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_6[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_7[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_7[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_8[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_8[$index]}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_9[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_9[$index]}]="$value"
+    local type
+    local name
+    local i
+    for type in "short" "long"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.${index}.${type}.size]}" ]; do
+            name="${__ARGS[option.${index}.${type}.${i}]}"
+            ARGS[${name}]="$value"
+            i=$((i + 1))
+        done
+    done
     return 0
 }
 
@@ -312,32 +295,37 @@ __args_parse_assign_option_multi_values() {
     local index="$1"
     local index_value="$2"
     local value="$3"
-    [ -n "${__ARGS_OPTION_SHORT_0[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_0[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_1[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_1[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_2[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_2[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_3[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_3[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_4[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_4[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_5[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_5[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_6[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_6[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_7[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_7[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_8[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_8[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_SHORT_9[$index]}" ] && ARGS[${__ARGS_OPTION_SHORT_9[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_0[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_0[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_1[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_1[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_2[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_2[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_3[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_3[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_4[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_4[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_5[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_5[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_6[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_6[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_7[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_7[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_8[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_8[$index]}_${index_value}]="$value"
-    [ -n "${__ARGS_OPTION_LONG_9[$index]}" ] && ARGS[${__ARGS_OPTION_LONG_9[$index]}_${index_value}]="$value"
+    local i
+    local type
+    local name
+    for type in "short" "long"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.${index}.${type}.size]}" ]; do
+            name="${__ARGS[option.${index}.${type}.${i}]}"
+            ARGS[${name}.${index_value}]="$value"
+            if [ "${ARGS[${name}]+abracadabra}" ]; then
+                ARGS[${name}]="${ARGS[${name}]} $value"
+            else
+                ARGS[${name}]="$value"
+            fi
+            i=$((i + 1))
+        done
+    done
     return 0
+}
+
+# Set the program name
+#   params:
+#     $1  Name of program
+#   example:
+#     args_set_prog_name "my_script"
+args_set_prog_name() {
+    __ARGS[PROG_NAME]="$1"
 }
 
 # Set a usage description
 args_set_description() {
-    __ARGS_DESCRIPTION="$*"
+    __ARGS[DESCRIPTION]="$*"
 }
 
 # Set a epilog description
@@ -346,14 +334,14 @@ args_set_description() {
 #   example:
 #     args_set_epilog "Your epilog " "message"
 args_set_epilog() {
-    __ARGS_EPILOG="$*"
+    __ARGS[EPILOG]="$*"
 }
 
 # Set a full usage message
 #   example:
 #     args_set_usage "Your usage " "message"
 args_set_usage() {
-    __ARGS_USAGE="$*"
+    __ARGS[USAGE]="$*"
 }
 
 # Set the widths of usage message
@@ -363,13 +351,19 @@ args_set_usage() {
 #     $3  Separator
 #     $4  Help
 args_set_usage_widths() {
-    __ARGS_USAGE_WIDTHS=("$1" "$2" "$3" "$4")
+    __ARGS[USAGE_WIDTH_PADDING]="$1"
+    __ARGS[USAGE_WIDTH_ARGUMENT]="$2"
+    __ARGS[USAGE_WIDTH_SEPARATOR]="$3"
+    __ARGS[USAGE_WIDTH_HELP]="$4"
 }
 
 # Check if argument is exists in argv
 #   param:
 #     $1  Argument name
 args_isexists() {
+    local i
+    local j
+    local type
     local name
     if [[ "$1" == "--"* ]]; then
         name="${1:2}"
@@ -378,43 +372,33 @@ args_isexists() {
     else
         name="$1"
     fi
-    local i
-    for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
-        if [ "$name" = "${__ARGS_ARGUMENT_NAME[$i]}" ]; then
-            if [ "${__ARGS_ARGUMENT_ISEXSISTS[$i]}" = "true" ]; then
+    i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        if [ "$name" = "${__ARGS[argument.${i}.name]}" ]; then
+            if [ "${__ARGS[argument.${i}.exists]}" = "true" ]; then
                 return 0
             else
                 return 1
             fi
         fi
+        i=$((i + 1))
     done
-    for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-        if [ "$name" = "${__ARGS_OPTION_SHORT_0[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_1[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_2[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_3[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_4[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_5[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_6[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_7[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_8[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_9[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_0[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_1[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_2[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_3[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_4[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_5[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_6[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_7[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_8[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_9[$i]}" ]; then
-            if [ "${__ARGS_OPTION_ISEXSISTS[$i]}" = "true" ]; then
-                return 0
-            else
-                return 1
-            fi
-        fi
+    for type in "short" "long"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+            j=0
+            while [ "$j" -lt "${__ARGS[option.${i}.${type}.size]}" ]; do
+                if [ "$name" = "${__ARGS[option.${i}.${type}.${j}]}" ]; then
+                    if [ "${__ARGS[option.${i}.exists]}" = "true" ]; then
+                        return 0
+                    else
+                        return 1
+                    fi
+                fi
+                j=$((j + 1))
+            done
+            i=$((i + 1))
+        done
     done
     >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '$1' is not a valid argument name"
     return 1
@@ -432,37 +416,27 @@ args_count() {
     else
         name="$1"
     fi
-    local i
-    for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
-        if [ "$name" = "${__ARGS_ARGUMENT_NAME[$i]}" ]; then
-            echo "${__ARGS_ARGUMENT_COUNT[$i]}"
+    local i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        if [ "$name" = "${__ARGS[argument.${i}.name]}" ]; then
+            echo "${__ARGS[argument.${i}.count]}"
             return 0
         fi
+        i=$((i + 1))
     done
-    for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-        if [ "$name" = "${__ARGS_OPTION_SHORT_0[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_1[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_2[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_3[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_4[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_5[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_6[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_7[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_8[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_SHORT_9[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_0[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_1[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_2[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_3[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_4[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_5[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_6[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_7[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_8[$i]}" ] || \
-           [ "$name" = "${__ARGS_OPTION_LONG_9[$i]}" ]; then
-            echo "${__ARGS_OPTION_COUNT[$i]}"
-            return 0
-        fi
+    for type in "short" "long"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+            j=0
+            while [ "$j" -lt "${__ARGS[option.${i}.${type}.size]}" ]; do
+                if [ "$name" = "${__ARGS[option.${i}.${type}.${j}]}" ]; then
+                    echo "${__ARGS[option.${i}.count]}"
+                    return 0
+                fi
+                j=$((j + 1))
+            done
+            i=$((i + 1))
+        done
     done
     >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '$1' is not a valid argument name"
     return 1
@@ -624,9 +598,10 @@ args_add_argument() {
         # default
         if [ -n "$default" ]; then
             # get number of word
-            local word=0
+            local word
             local word_nb=0
             for word in ${default}; do
+                word+=""
                 word_nb=$((word_nb + 1))
             done
             if [ "$word_nb" -ne "$nargs" ]; then
@@ -740,53 +715,43 @@ args_add_argument() {
     done
 
     if [ "$is_argument" = "true" ]; then
-        __ARGS_ARGUMENT_NAME+=("$argument_name")
-        __ARGS_ARGUMENT_HELP+=("$help")
-        __ARGS_ARGUMENT_DEFAULT+=("$default")
-        __ARGS_ARGUMENT_DEST+=("$dest")
-        __ARGS_ARGUMENT_REQUIRED+=("$required")
-        __ARGS_ARGUMENT_ISEXSISTS+=("false")
-        __ARGS_ARGUMENT_COUNT+=(0)
-        __ARGS_ARGUMENT_CHOICES+=("${choices}")
+        __ARGS[argument.${__ARGS[argument.size]}.name]="$argument_name"
+        __ARGS[argument.${__ARGS[argument.size]}.help]="$help"
+        __ARGS[argument.${__ARGS[argument.size]}.default]="$default"
+        __ARGS[argument.${__ARGS[argument.size]}.dest]="$dest"
+        __ARGS[argument.${__ARGS[argument.size]}.required]="$required"
+        __ARGS[argument.${__ARGS[argument.size]}.exists]="false"
+        __ARGS[argument.${__ARGS[argument.size]}.count]=0
+        __ARGS[argument.${__ARGS[argument.size]}.choices]="$choices"
+        __ARGS[argument.size]=$((${__ARGS[argument.size]} + 1))
     else
-        [ "${#short_flags[@]}" -gt 0 ] && __ARGS_OPTION_SHORT_0+=("${short_flags[0]}") || __ARGS_OPTION_SHORT_0+=("")
-        [ "${#short_flags[@]}" -gt 1 ] && __ARGS_OPTION_SHORT_1+=("${short_flags[1]}") || __ARGS_OPTION_SHORT_1+=("")
-        [ "${#short_flags[@]}" -gt 2 ] && __ARGS_OPTION_SHORT_2+=("${short_flags[2]}") || __ARGS_OPTION_SHORT_2+=("")
-        [ "${#short_flags[@]}" -gt 3 ] && __ARGS_OPTION_SHORT_3+=("${short_flags[3]}") || __ARGS_OPTION_SHORT_3+=("")
-        [ "${#short_flags[@]}" -gt 4 ] && __ARGS_OPTION_SHORT_4+=("${short_flags[4]}") || __ARGS_OPTION_SHORT_4+=("")
-        [ "${#short_flags[@]}" -gt 5 ] && __ARGS_OPTION_SHORT_5+=("${short_flags[5]}") || __ARGS_OPTION_SHORT_5+=("")
-        [ "${#short_flags[@]}" -gt 6 ] && __ARGS_OPTION_SHORT_6+=("${short_flags[6]}") || __ARGS_OPTION_SHORT_6+=("")
-        [ "${#short_flags[@]}" -gt 7 ] && __ARGS_OPTION_SHORT_7+=("${short_flags[7]}") || __ARGS_OPTION_SHORT_7+=("")
-        [ "${#short_flags[@]}" -gt 8 ] && __ARGS_OPTION_SHORT_8+=("${short_flags[8]}") || __ARGS_OPTION_SHORT_8+=("")
-        [ "${#short_flags[@]}" -ge 9 ] && __ARGS_OPTION_SHORT_9+=("${short_flags[9]}") || __ARGS_OPTION_SHORT_9+=("")
+        for i in "${!short_flags[@]}"; do
+            __ARGS[option.${__ARGS[option.size]}.short.${i}]="${short_flags[$i]}"
+        done
+        __ARGS[option.${__ARGS[option.size]}.short.size]="${#short_flags[@]}"
 
-        [ "${#long_flags[@]}" -gt 0 ] && __ARGS_OPTION_LONG_0+=("${long_flags[0]}") || __ARGS_OPTION_LONG_0+=("")
-        [ "${#long_flags[@]}" -gt 1 ] && __ARGS_OPTION_LONG_1+=("${long_flags[1]}") || __ARGS_OPTION_LONG_1+=("")
-        [ "${#long_flags[@]}" -gt 2 ] && __ARGS_OPTION_LONG_2+=("${long_flags[2]}") || __ARGS_OPTION_LONG_2+=("")
-        [ "${#long_flags[@]}" -gt 3 ] && __ARGS_OPTION_LONG_3+=("${long_flags[3]}") || __ARGS_OPTION_LONG_3+=("")
-        [ "${#long_flags[@]}" -gt 4 ] && __ARGS_OPTION_LONG_4+=("${long_flags[4]}") || __ARGS_OPTION_LONG_4+=("")
-        [ "${#long_flags[@]}" -gt 5 ] && __ARGS_OPTION_LONG_5+=("${long_flags[5]}") || __ARGS_OPTION_LONG_5+=("")
-        [ "${#long_flags[@]}" -gt 6 ] && __ARGS_OPTION_LONG_6+=("${long_flags[6]}") || __ARGS_OPTION_LONG_6+=("")
-        [ "${#long_flags[@]}" -gt 7 ] && __ARGS_OPTION_LONG_7+=("${long_flags[7]}") || __ARGS_OPTION_LONG_7+=("")
-        [ "${#long_flags[@]}" -gt 8 ] && __ARGS_OPTION_LONG_8+=("${long_flags[8]}") || __ARGS_OPTION_LONG_8+=("")
-        [ "${#long_flags[@]}" -ge 9 ] && __ARGS_OPTION_LONG_9+=("${long_flags[9]}") || __ARGS_OPTION_LONG_9+=("")
+        for i in "${!long_flags[@]}"; do
+            __ARGS[option.${__ARGS[option.size]}.long.${i}]="${long_flags[$i]}"
+        done
+        __ARGS[option.${__ARGS[option.size]}.long.size]="${#long_flags[@]}"
 
         if [ "$action" = "store_false" ]; then
-            __ARGS_OPTION_DEFAULT+=("true")
+            __ARGS[option.${__ARGS[option.size]}.default]="true"
         elif [ "$action" = "store_true" ]; then
-            __ARGS_OPTION_DEFAULT+=("false")
+            __ARGS[option.${__ARGS[option.size]}.default]="false"
         else
-            __ARGS_OPTION_DEFAULT+=("$default")
+            __ARGS[option.${__ARGS[option.size]}.default]="$default"
         fi
-        __ARGS_OPTION_ACTION+=("$action")
-        __ARGS_OPTION_METAVAR+=("$metavar")
-        __ARGS_OPTION_HELP+=("$help")
-        __ARGS_OPTION_DEST+=("$dest")
-        __ARGS_OPTION_REQUIRED+=("$required")
-        __ARGS_OPTION_ISEXSISTS+=("false")
-        __ARGS_OPTION_COUNT+=(0)
-        __ARGS_OPTION_CHOICES+=("${choices}")
-        __ARGS_OPTION_NARGS+=("${nargs}")
+        __ARGS[option.${__ARGS[option.size]}.action]="$action"
+        __ARGS[option.${__ARGS[option.size]}.metavar]="$metavar"
+        __ARGS[option.${__ARGS[option.size]}.help]="$help"
+        __ARGS[option.${__ARGS[option.size]}.dest]="$dest"
+        __ARGS[option.${__ARGS[option.size]}.required]="$required"
+        __ARGS[option.${__ARGS[option.size]}.exists]="false"
+        __ARGS[option.${__ARGS[option.size]}.count]=0
+        __ARGS[option.${__ARGS[option.size]}.choices]="$choices"
+        __ARGS[option.${__ARGS[option.size]}.nargs]="$nargs"
+        __ARGS[option.size]=$((${__ARGS[option.size]} + 1))
     fi
     return 0
 }
@@ -798,115 +763,70 @@ args_debug_values() {
     local key
     local value
     local i
+    local j
     local count
-    for key in "${__ARGS_ARGUMENT_NAME[@]:-}"; do
-        count=$((${#key}))
+    local type
+    i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        count="${#__ARGS[argument.${i}.name]}"
         if [ $count -gt $max_col ]; then
             max_col=$count
         fi
+        i=$((i + 1))
     done
-    for i in "${!__ARGS_OPTION_SHORT_0[@]}"; do
+    i=0
+    while [ "$i" -lt "${__ARGS[option.size]}" ]; do
         key=""
-        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-            key+="-${__ARGS_OPTION_SHORT_0[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_1[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_1[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_2[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_2[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_3[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_3[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_4[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_4[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_5[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_5[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_6[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_6[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_7[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_7[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_8[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_8[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_9[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_9[$i]}"
-        fi
-        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-            key+=", "
-        fi
-        if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-            key+="--${__ARGS_OPTION_LONG_0[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_1[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_1[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_2[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_2[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_3[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_3[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_4[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_4[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_5[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_5[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_6[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_6[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_7[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_7[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_8[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_8[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_9[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_9[$i]}"
-        fi
+        for type in "short" "long"; do
+            j=0
+            while [ "$j" -lt "${__ARGS[option.${i}.${type}.size]}" ]; do
+                [ -n "$key" ] && key+=", "
+                [ "$type" = "short" ] && key+="-"
+                [ "$type" = "long" ] && key+="--"
+                key+="${__ARGS[option.${i}.${type}.${j}]}"
+                j=$((j + 1))
+            done
+        done
         count=$((${#key}))
         if [ $count -gt $max_col ]; then
             max_col=$count
         fi
-    done
-    for key in "${__ARGS_OPTION_SHORT_0[@]:-}" \
-               "${__ARGS_OPTION_SHORT_1[@]:-}" \
-               "${__ARGS_OPTION_SHORT_2[@]:-}" \
-               "${__ARGS_OPTION_SHORT_3[@]:-}" \
-               "${__ARGS_OPTION_SHORT_4[@]:-}" \
-               "${__ARGS_OPTION_SHORT_5[@]:-}" \
-               "${__ARGS_OPTION_SHORT_6[@]:-}" \
-               "${__ARGS_OPTION_SHORT_7[@]:-}" \
-               "${__ARGS_OPTION_SHORT_8[@]:-}" \
-               "${__ARGS_OPTION_SHORT_9[@]:-}" ; do
-        # add len of '-'
-        count=$((${#key} + 1))
-        if [ $count -gt $max_col ]; then
-            max_col=$count
-        fi
-    done
-    for key in "${__ARGS_OPTION_LONG_0[@]:-}" \
-               "${__ARGS_OPTION_LONG_1[@]:-}" \
-               "${__ARGS_OPTION_LONG_2[@]:-}" \
-               "${__ARGS_OPTION_LONG_3[@]:-}" \
-               "${__ARGS_OPTION_LONG_4[@]:-}" \
-               "${__ARGS_OPTION_LONG_5[@]:-}" \
-               "${__ARGS_OPTION_LONG_6[@]:-}" \
-               "${__ARGS_OPTION_LONG_7[@]:-}" \
-               "${__ARGS_OPTION_LONG_8[@]:-}" \
-               "${__ARGS_OPTION_LONG_9[@]:-}" ; do
-        # add len of '--'
-        count=$((${#key} + 2))
-        if [ $count -gt $max_col ]; then
-            max_col=$count
-        fi
+        i=$((i + 1))
     done
 
-    for key in "${__ARGS_ARGUMENT_NAME[@]:-}"; do
-        printf -- "%-*s : %s\n" "$max_col" "$(printf -- "%s" "$key")" "${ARGS["$key"]:-}"
+    i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        printf -- "%-*s : %s (count: %s, exists: %s)\n" \
+            "$max_col" \
+            "${__ARGS[argument.${i}.name]}" \
+            "${ARGS[${__ARGS[argument.${i}.name]}]:-}" \
+            "${__ARGS[argument.${i}.count]}" \
+            "${__ARGS[argument.${i}.exists]}"
+        i=$((i + 1))
     done
-    for i in "${!__ARGS_OPTION_SHORT_0[@]}"; do
+    i=0
+    while [ "$i" -lt "${__ARGS[option.size]}" ]; do
         key=""
-        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-            value="${ARGS["${__ARGS_OPTION_SHORT_0[$i]}"]:-}"
-            key+="-${__ARGS_OPTION_SHORT_0[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_1[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_1[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_2[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_2[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_3[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_3[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_4[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_4[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_5[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_5[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_6[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_6[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_7[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_7[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_8[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_8[$i]}"
-            [ -n "${__ARGS_OPTION_SHORT_9[$i]}" ] && key+=", -${__ARGS_OPTION_SHORT_9[$i]}"
-        fi
-        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-            key+=", "
-        fi
-        if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-            value="${ARGS["${__ARGS_OPTION_LONG_0[$i]}"]:-}"
-            key+="--${__ARGS_OPTION_LONG_0[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_1[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_1[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_2[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_2[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_3[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_3[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_4[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_4[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_5[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_5[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_6[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_6[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_7[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_7[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_8[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_8[$i]}"
-            [ -n "${__ARGS_OPTION_LONG_9[$i]}" ] && key+=", --${__ARGS_OPTION_LONG_9[$i]}"
-        fi
-        printf -- "%-*s : %s (count: %s,exists: %s)\n" "$max_col" "$key" "$value" "${__ARGS_OPTION_COUNT[$i]}" "${__ARGS_OPTION_ISEXSISTS[$i]}"
+        for type in "short" "long"; do
+            j=0
+            while [ "$j" -lt "${__ARGS[option.${i}.${type}.size]}" ]; do
+                [ -n "$key" ] && key+=", "
+                [ "$type" = "short" ] && key+="-"
+                [ "$type" = "long" ] && key+="--"
+                key+="${__ARGS[option.${i}.${type}.${j}]}"
+                j=$((j + 1))
+            done
+        done
+        local name=""
+        [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && name="${__ARGS[option.${i}.long.0]}"
+        [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && name="${__ARGS[option.${i}.short.0]}"
+        printf -- "%-*s : %s (count: %s, exists: %s)\n" \
+            "$max_col" \
+            "$key" \
+            "${ARGS[$name]:-}" \
+            "${__ARGS[option.${i}.count]}" \
+            "${__ARGS[option.${i}.exists]}"
+        i=$((i + 1))
     done
     return 0
 }
@@ -915,50 +835,55 @@ args_debug_values() {
 #   params:
 #     $1  Name/Path of script
 args_usage() {
-    if [ -n "$__ARGS_USAGE" ]; then
-        echo "$__ARGS_USAGE"
+    if [ -n "${__ARGS[USAGE]}" ]; then
+        echo "${__ARGS[USAGE]}"
     else
         __args_sort
         local i
         local j
         local str
-        local max_col="$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] + __ARGS_USAGE_WIDTHS[3]))"
+        local max_col="$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] + __ARGS[USAGE_WIDTH_HELP]))"
         local current_col=0
         local has_max_col=false
         # generate usage message
-        str="usage: ${1##*/}"
+        if [ -n "${__ARGS[PROG_NAME]}" ]; then
+            str="usage: ${__ARGS[PROG_NAME]##*/}"
+        else
+            str="usage: ${1##*/}"
+        fi
         local usage_basename_length="${#str}"
         current_col="$usage_basename_length"
-        for i in "${!__ARGS_OPTION_ACTION[@]}"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.size]}" ]; do
             local option=""
             option+=" "
-            if ! ${__ARGS_OPTION_REQUIRED[$i]}; then
+            if [ "false" = "${__ARGS[option.${i}.required]}" ]; then
                 option+="["
             fi
-            if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-                option+="-${__ARGS_OPTION_SHORT_0[$i]}"
-            elif [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                option+="--${__ARGS_OPTION_LONG_0[$i]}"
+            if [ "${__ARGS[option.${i}.short.size]}" -ne 0 ]; then
+                option+="-${__ARGS[option.${i}.short.0]}"
+            elif [ "${__ARGS[option.${i}.long.size]}" -ne 0 ]; then
+                option+="--${__ARGS[option.${i}.long.0]}"
             fi
-            if [ "store" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-               [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-               [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+            if [ "store" = "${__ARGS[option.${i}.action]}" ] || \
+               [ "append" = "${__ARGS[option.${i}.action]}" ] || \
+               [ "infinite" = "${__ARGS[option.${i}.action]}" ]; then
                 option+=" "
-                if [ -n "${__ARGS_OPTION_METAVAR[$i]}" ]; then
-                    option+="${__ARGS_OPTION_METAVAR[$i]}"
+                if [ -n "${__ARGS[option.${i}.metavar]}" ]; then
+                    option+="${__ARGS[option.${i}.metavar]}"
                 else
-                    if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                        local option_argument="${__ARGS_OPTION_LONG_0[$i]^^}"
+                    if [ "${__ARGS[option.${i}.long.size]}" -ne 0 ]; then
+                        local option_argument="${__ARGS[option.${i}.long.0]^^}"
                         option+="${option_argument//-/_}"
                     else
-                        option+="${__ARGS_OPTION_SHORT_0[$i]^^}"
+                        option+="${__ARGS[option.${i}.short.0]^^}"
                     fi
-                    if [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                    if [ "infinite" = "${__ARGS[option.${i}.action]}" ]; then
                         option+="..."
                     fi
                 fi
             fi
-            if ! ${__ARGS_OPTION_REQUIRED[$i]}; then
+            if [ "false" = "${__ARGS[option.${i}.required]}" ]; then
                 option+="]"
             fi
             if [ "$((current_col + ${#option}))" -gt "$max_col" ]; then
@@ -973,8 +898,9 @@ args_usage() {
             fi
             str+="$option"
             current_col="$((current_col + ${#option}))"
+            i=$((i + 1))
         done
-        if [ "${#__ARGS_ARGUMENT_NAME[@]}" -ne 0 ]; then
+        if [ "${__ARGS[argument.size]}" -ne 0 ]; then
             if $has_max_col || [ "$((current_col + 3))" -gt "$max_col" ]; then
                 str+=$'\n'
                 j=0
@@ -995,13 +921,14 @@ args_usage() {
                 current_col="$((current_col + 3))"
             fi
         fi
-        for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
             local option=""
             option+=" "
-            if ${__ARGS_ARGUMENT_REQUIRED[$i]}; then
-                option+="${__ARGS_ARGUMENT_NAME[$i]}"
+            if [ "${__ARGS[argument.${i}.required]}" = "true" ]; then
+                option+="${__ARGS[argument.${i}.name]}"
             else
-                option+="[${__ARGS_ARGUMENT_NAME[$i]}]"
+                option+="[${__ARGS[argument.${i}.name]}]"
             fi
             if [ "$((current_col + ${#option}))" -gt "$max_col" ]; then
                 has_max_col=true
@@ -1015,155 +942,145 @@ args_usage() {
             fi
             str+="$option"
             current_col="$((current_col + ${#option}))"
+            i=$((i + 1))
         done
         str+=$'\n'
-        if [ -n "$__ARGS_DESCRIPTION" ]; then
+        if [ -n "${__ARGS[DESCRIPTION]}" ]; then
             str+=$'\n'
-            str+="$__ARGS_DESCRIPTION"
+            str+="${__ARGS[DESCRIPTION]}"
             str+=$'\n'
         fi
-        if [ "${#__ARGS_ARGUMENT_NAME[@]}" -ne 0 ]; then
+        if [ "${__ARGS[argument.size]}" -ne 0 ]; then
             str+=$'\n'
             str+="positional arguments:"
             str+=$'\n'
         fi
-        for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
             j=0
-            while [ "$j" -lt "${__ARGS_USAGE_WIDTHS[0]}" ]; do
+            while [ "$j" -lt "${__ARGS[USAGE_WIDTH_PADDING]}" ]; do
                 str+=" "
                 j=$((j + 1))
             done
             local option=""
-            option+="${__ARGS_ARGUMENT_NAME[$i]}"
+            option+="${__ARGS[argument.${i}.name]}"
             str+="$option"
-            if [ -n "${__ARGS_ARGUMENT_HELP[$i]}" ]; then
-                if [ "${#option}" -gt "${__ARGS_USAGE_WIDTHS[1]}" ]; then
+            if [ -n "${__ARGS[argument.${i}.help]}" ]; then
+                if [ "${#option}" -gt "${__ARGS[USAGE_WIDTH_ARGUMENT]}" ]; then
                     str+=$'\n'
                     j=0
-                    while [ "$j" -lt "$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))" ]; do
+                    while [ "$j" -lt "$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))" ]; do
                         str+=" "
                         j=$((j + 1))
                     done
                 else
                     j=0
-                    while [ "$j" -lt "$((__ARGS_USAGE_WIDTHS[1] - ${#option} + __ARGS_USAGE_WIDTHS[2] - 1))" ]; do
+                    while [ "$j" -lt "$((__ARGS[USAGE_WIDTH_ARGUMENT] - ${#option} + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))" ]; do
                         str+=" "
                         j=$((j + 1))
                     done
                 fi
-                current_col="$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))"
+                current_col="$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))"
                 local word=""
-                for word in ${__ARGS_ARGUMENT_HELP[$i]}; do
-                    if [ "$((current_col + ${#word} + 1))" -gt "$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] + __ARGS_USAGE_WIDTHS[3]))" ]; then
+                for word in ${__ARGS[argument.${i}.help]}; do
+                    if [ "$((current_col + ${#word} + 1))" -gt "$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] + __ARGS[USAGE_WIDTH_HELP]))" ]; then
                         str+=$'\n'
                         j=0
-                        while [ "$j" -lt "$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))" ]; do
+                        while [ "$j" -lt "$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))" ]; do
                             str+=" "
                             j=$((j + 1))
                         done
-                        current_col="$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))"
+                        current_col="$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))"
                     fi
                     str+=" $word"
                     current_col="$((current_col + ${#word} + 1))"
                 done
             fi
             str+=$'\n'
+            i=$((i + 1))
         done
-        if [ "${#__ARGS_OPTION_ACTION[@]}" -ne 0 ]; then
+        if [ "${__ARGS[option.size]}" -ne 0 ]; then
             str+=$'\n'
             str+="optional arguments:"
             str+=$'\n'
         fi
-        for i in "${!__ARGS_OPTION_ACTION[@]}"; do
+        i=0
+        while [ "$i" -lt "${__ARGS[option.size]}" ]; do
             j=0
-            while [ "$j" -lt "${__ARGS_USAGE_WIDTHS[0]}" ]; do
+            while [ "$j" -lt "${__ARGS[USAGE_WIDTH_PADDING]}" ]; do
                 str+=" "
                 j=$((j + 1))
             done
             local option=""
-            if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-                option+="-${__ARGS_OPTION_SHORT_0[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_1[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_1[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_2[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_2[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_3[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_3[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_4[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_4[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_5[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_5[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_6[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_6[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_7[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_7[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_8[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_8[$i]}"
-                [ -n "${__ARGS_OPTION_SHORT_9[$i]}" ] && option+=", -${__ARGS_OPTION_SHORT_9[$i]}"
-            fi
-            if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ] && [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                option+=", "
-            fi
-            if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                option+="--${__ARGS_OPTION_LONG_0[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_1[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_1[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_2[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_2[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_3[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_3[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_4[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_4[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_5[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_5[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_6[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_6[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_7[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_7[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_8[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_8[$i]}"
-                [ -n "${__ARGS_OPTION_LONG_9[$i]}" ] && option+=", --${__ARGS_OPTION_LONG_9[$i]}"
-            fi
+            local type
+            for type in "short" "long"; do
+                j=0
+                while [ "$j" -lt "${__ARGS[option.${i}.${type}.size]}" ]; do
+                    [ -n "$option" ] && option+=", "
+                    [ "$type" = "short" ] && option+="-"
+                    [ "$type" = "long" ] && option+="--"
+                    option+="${__ARGS[option.${i}.${type}.${j}]}"
+                    j=$((j + 1))
+                done
+            done
 
-            if [ "store" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-               [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-               [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+            if [ "store" = "${__ARGS[option.${i}.action]}" ] || \
+               [ "append" = "${__ARGS[option.${i}.action]}" ] || \
+               [ "infinite" = "${__ARGS[option.${i}.action]}" ]; then
                 option+=" "
-                if [ -n "${__ARGS_OPTION_METAVAR[$i]}" ]; then
-                    option+="${__ARGS_OPTION_METAVAR[$i]}"
+                if [ -n "${__ARGS[option.${i}.metavar]}" ]; then
+                    option+="${__ARGS[option.${i}.metavar]}"
                 else
-                    if [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                        local option_argument="${__ARGS_OPTION_LONG_0[$i]^^}"
+                    if [ "${__ARGS[option.${i}.long.size]}" -ne 0 ]; then
+                        local option_argument="${__ARGS[option.${i}.long.0]^^}"
                         option+="${option_argument//-/_}"
                     else
-                        option+="${__ARGS_OPTION_SHORT_0[$i]^^}"
+                        option+="${__ARGS[option.${i}.short.0]^^}"
                     fi
-                    if [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                    if [ "infinite" = "${__ARGS[option.${i}.action]}" ]; then
                         option+="..."
                     fi
                 fi
             fi
             str+="$option"
-            if [ -n "${__ARGS_OPTION_HELP[$i]}" ]; then
-                if [ "${#option}" -gt "${__ARGS_USAGE_WIDTHS[1]}" ]; then
+
+            if [ -n "${__ARGS[option.${i}.help]}" ]; then
+                if [ "${#option}" -gt "${__ARGS[USAGE_WIDTH_ARGUMENT]}" ]; then
                     str+=$'\n'
                     j=0
-                    while [ "$j" -lt "$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))" ]; do
+                    while [ "$j" -lt "$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))" ]; do
                         str+=" "
                         j=$((j + 1))
                     done
                 else
                     j=0
-                    while [ "$j" -lt "$((__ARGS_USAGE_WIDTHS[1] - ${#option} + __ARGS_USAGE_WIDTHS[2] - 1))" ]; do
+                    while [ "$j" -lt "$((__ARGS[USAGE_WIDTH_ARGUMENT] - ${#option} + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))" ]; do
                         str+=" "
                         j=$((j + 1))
                     done
                 fi
-                current_col="$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))"
+                current_col="$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))"
                 local word=""
-                for word in ${__ARGS_OPTION_HELP[$i]}; do
-                    if [ "$((current_col + ${#word} + 1))" -gt "$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] + __ARGS_USAGE_WIDTHS[3]))" ]; then
+                for word in ${__ARGS[option.${i}.help]}; do
+                    if [ "$((current_col + ${#word} + 1))" -gt "$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] + __ARGS[USAGE_WIDTH_HELP]))" ]; then
                         str+=$'\n'
                         j=0
-                        while [ "$j" -lt "$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))" ]; do
+                        while [ "$j" -lt "$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))" ]; do
                             str+=" "
                             j=$((j + 1))
                         done
-                        current_col="$((__ARGS_USAGE_WIDTHS[0] + __ARGS_USAGE_WIDTHS[1] + __ARGS_USAGE_WIDTHS[2] - 1))"
+                        current_col="$((__ARGS[USAGE_WIDTH_PADDING] + __ARGS[USAGE_WIDTH_ARGUMENT] + __ARGS[USAGE_WIDTH_SEPARATOR] - 1))"
                     fi
                     str+=" $word"
                     current_col="$((current_col + ${#word} + 1))"
                 done
             fi
             str+=$'\n'
+            i=$((i + 1))
         done
-        if [ -n "$__ARGS_EPILOG" ]; then
+        if [ -n "${__ARGS[EPILOG]}" ]; then
             str+=$'\n'
-            str+="$__ARGS_EPILOG"
+            str+="${__ARGS[EPILOG]}"
             str+=$'\n'
         fi
         echo -n "$str"
@@ -1191,7 +1108,8 @@ args_parse_arguments() {
         args_add_argument --action="store_true" --help="print this help message" -- "--help"
     fi
     local i
-    local j=0
+    local j
+    local positional_index=0
     while true; do
         if [ $# -eq 0 ]; then
             break
@@ -1208,131 +1126,94 @@ args_parse_arguments() {
         done
         local is_option="false"
         # Get options
-        for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-            if [[ -n "${__ARGS_OPTION_SHORT_0[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_0[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_1[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_1[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_2[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_2[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_3[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_3[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_4[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_4[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_5[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_5[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_6[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_6[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_7[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_7[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_8[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_8[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_SHORT_9[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_9[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_0[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_0[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_1[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_1[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_2[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_2[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_3[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_3[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_4[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_4[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_5[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_5[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_6[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_6[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_7[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_7[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_8[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_8[$i]}" ]] || \
-               [[ -n "${__ARGS_OPTION_LONG_9[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_9[$i]}" ]]; then
-                if [ "${__ARGS_OPTION_NARGS[$i]}" -gt 1 ]; then
+        i=0
+        while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+            if __args_parse_option_is_value "$i" "$1"; then
+                if [ "${__ARGS[option.${i}.nargs]}" -gt 1 ]; then
                     local option_name="$1"
                     local nargs=0
-                    while [ "$nargs" -lt "${__ARGS_OPTION_NARGS[$i]}" ]; do
+                    while [ "$nargs" -lt "${__ARGS[option.${i}.nargs]}" ]; do
                         if [ $# -le 1 ] || [ "--" = "$2" ]; then
-                            >&2 echo "$binary_name: option '$option_name' require '${__ARGS_OPTION_NARGS[$i]}' arguments"
+                            >&2 echo "$binary_name: option '$option_name' require '${__ARGS[option.${i}.nargs]}' arguments"
                             return 1
                         fi
                         __args_parse_assign_option_multi_values "$i" "$nargs" "$2"
                         nargs=$((nargs + 1))
                         shift
                     done
-                    __ARGS_OPTION_ISEXSISTS[$i]="true"
-                    __ARGS_OPTION_COUNT[$i]=$((__ARGS_OPTION_COUNT[i] + 1))
+                    __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
+                    __ARGS[option.${i}.exists]="true"
                     shift
-                elif [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                elif [ "infinite" = "${__ARGS[option.${i}.action]}" ]; then
                     local option_name="$1"
                     while true; do
                         if [ $# -le 1 ] || [ "--" = "$2" ] || [[ "$2" =~ ^"-"[[:alpha:]] ]] || [[ "$2" =~ ^"--"[[:alpha:]] ]]; then
                             break
                         fi
-                        __args_parse_assign_option_multi_values "$i" "${__ARGS_OPTION_COUNT[$i]}" "$2"
-                        __ARGS_OPTION_COUNT[$i]=$((__ARGS_OPTION_COUNT[i] + 1))
+                        __args_parse_assign_option_multi_values "$i" "${__ARGS[option.${i}.count]}" "$2"
+                        __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
                         shift
                     done
-                    __ARGS_OPTION_ISEXSISTS[$i]="true"
+                    __ARGS[option.${i}.exists]="true"
                     shift
-                elif [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                elif [ "append" = "${__ARGS[option.${i}.action]}" ]; then
                     local value=""
                     if [ $# -le 1 ] || [ "--" = "$2" ]; then
                         >&2 echo "$binary_name: option '$1' require a argument"
                         return 1
                     fi
                     value="$2"
-                    if [ -n "${__ARGS_OPTION_CHOICES[$i]}" ] && [[ ! "${__ARGS_OPTION_CHOICES[$i]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
-                        >&2 echo "$binary_name: option '$value' is not a valid choise (${__ARGS_OPTION_CHOICES[$i]// /, })"
+                    if [ -n "${__ARGS[option.${i}.choices]}" ] && [[ ! "${__ARGS[option.${i}.choices]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
+                        >&2 echo "$binary_name: option '$value' is not a valid choise (${__ARGS[option.${i}.choices]// /, })"
                         return 1
                     fi
                     shift
-                    __args_parse_assign_option_multi_values "$i" "${__ARGS_OPTION_COUNT[$i]}" "$value"
-                    __ARGS_OPTION_COUNT[$i]=$((__ARGS_OPTION_COUNT[i] + 1))
-                    __ARGS_OPTION_ISEXSISTS[$i]="true"
+                    __args_parse_assign_option_multi_values "$i" "${__ARGS[option.${i}.count]}" "$2"
+                    __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
+                    __ARGS[option.${i}.exists]="true"
                     shift
                 else
                     local value=""
-                    if [ "store" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                    if [ "store" = "${__ARGS[option.${i}.action]}" ]; then
                         if [ $# -le 1 ] || [ "--" = "$2" ]; then
                             >&2 echo "$binary_name: option '$1' require a argument"
                             return 1
                         fi
                         value="$2"
-                        if [ -n "${__ARGS_OPTION_CHOICES[$i]}" ] && [[ ! "${__ARGS_OPTION_CHOICES[$i]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
-                            >&2 echo "$binary_name: option '$1' is not a valid choise (${__ARGS_OPTION_CHOICES[$i]// /, })"
+                        if [ -n "${__ARGS[option.${i}.choices]}" ] && [[ ! "${__ARGS[option.${i}.choices]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
+                            >&2 echo "$binary_name: option '$value' is not a valid choise (${__ARGS[option.${i}.choices]// /, })"
                             return 1
                         fi
                         shift
-                    elif [ "store_true" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                    elif [ "store_true" = "${__ARGS[option.${i}.action]}" ]; then
                         value="true"
-                    elif [ "store_false" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                    elif [ "store_false" = "${__ARGS[option.${i}.action]}" ]; then
                         value="false"
-                    elif [ "count" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-                        value=$((__ARGS_OPTION_COUNT[i] + 1))
+                    elif [ "count" = "${__ARGS[option.${i}.action]}" ]; then
+                        value=$((${__ARGS[option.${i}.count]} + 1))
                     fi
-                    __ARGS_OPTION_ISEXSISTS[$i]="true"
-                    __ARGS_OPTION_COUNT[$i]=$((__ARGS_OPTION_COUNT[i] + 1))
                     __args_parse_assign_option_value "$i" "$value"
+                    __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
+                    __ARGS[option.${i}.exists]="true"
                     shift
                 fi
                 is_option="true"
                 break
-            elif [[ -n "${__ARGS_OPTION_SHORT_0[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_0[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_1[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_1[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_2[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_2[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_3[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_3[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_4[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_4[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_5[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_5[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_6[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_6[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_7[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_7[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_8[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_8[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_9[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_9[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_0[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_0[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_1[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_1[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_2[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_2[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_3[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_3[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_4[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_4[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_5[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_5[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_6[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_6[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_7[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_7[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_8[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_8[$i]}="* ]] || \
-                 [[ -n "${__ARGS_OPTION_LONG_9[$i]}" && "$1" = "--${__ARGS_OPTION_LONG_9[$i]}="* ]]; then
-                if [ "store" = "${__ARGS_OPTION_ACTION[$i]}" ] || [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+            elif __args_parse_option_is_assign_value "$i" "$1"; then
+                if [ "store" = "${__ARGS[option.${i}.action]}" ] || [ "append" = "${__ARGS[option.${i}.action]}" ]; then
                     local value=""
                     value="${1#*=}"
-                    if [ -n "${__ARGS_OPTION_CHOICES[$i]}" ] && [[ ! "${__ARGS_OPTION_CHOICES[$i]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
-                        >&2 echo "$binary_name: option '$value' is not a valid choise (${__ARGS_OPTION_CHOICES[$i]// /, })"
+                    if [ -n "${__ARGS[option.${i}.choices]}" ] && [[ ! "${__ARGS[option.${i}.choices]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
+                        >&2 echo "$binary_name: option '$value' is not a valid choise (${__ARGS[option.${i}.choices]// /, })"
                         return 1
                     fi
-                    if [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-                        __args_parse_assign_option_multi_values "$i" "${__ARGS_OPTION_COUNT[$i]}" "$value"
+                    if [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                        __args_parse_assign_option_multi_values "$i" "${__ARGS[option.${i}.count]}" "$value"
                     else
                         __args_parse_assign_option_value "$i" "$value"
                     fi
-                    __ARGS_OPTION_COUNT[$i]=$((__ARGS_OPTION_COUNT[i] + 1))
-                    __ARGS_OPTION_ISEXSISTS[$i]="true"
+                    __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
+                    __ARGS[option.${i}.exists]="true"
                     shift
                 else
                     >&2 echo "$binary_name: option '$1' don't take a argument"
@@ -1340,30 +1221,21 @@ args_parse_arguments() {
                 fi
                 is_option="true"
                 break
-            elif [[ -n "${__ARGS_OPTION_SHORT_0[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_0[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_1[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_1[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_2[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_2[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_3[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_3[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_4[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_4[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_5[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_5[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_6[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_6[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_7[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_7[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_8[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_8[$i]}"* ]] || \
-                 [[ -n "${__ARGS_OPTION_SHORT_9[$i]}" && "$1" = "-${__ARGS_OPTION_SHORT_9[$i]}"* ]]; then
+            elif __args_parse_option_is_multi_short_value "$i" "$1"; then
                 local value=""
-                if [ "store" = "${__ARGS_OPTION_ACTION[$i]}" ] || [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+                if [ "store" = "${__ARGS[option.${i}.action]}" ] || [ "append" = "${__ARGS[option.${i}.action]}" ]; then
                     value="${1:2}"
-                    if [ -n "${__ARGS_OPTION_CHOICES[$i]}" ] && [[ ! "${__ARGS_OPTION_CHOICES[$i]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
-                        >&2 echo "$binary_name: option '$1' is not a valid choise (${__ARGS_OPTION_CHOICES[$i]// /, })"
+                    if [ -n "${__ARGS[option.${i}.choices]}" ] && [[ ! "${__ARGS[option.${i}.choices]}" =~ (^|[[:space:]])"$value"($|[[:space:]]) ]]; then
+                        >&2 echo "$binary_name: option '$value' is not a valid choise (${__ARGS[option.${i}.choices]// /, })"
                         return 1
                     fi
-                    if [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-                        __args_parse_assign_option_multi_values "$i" "${__ARGS_OPTION_COUNT[$i]}" "$value"
+                    if [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                        __args_parse_assign_option_multi_values "$i" "${__ARGS[option.${i}.count]}" "$value"
                     else
                         __args_parse_assign_option_value "$i" "$value"
                     fi
-                    __ARGS_OPTION_COUNT[$i]=$((__ARGS_OPTION_COUNT[i] + 1))
-                    __ARGS_OPTION_ISEXSISTS[$i]="true"
+                    __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
+                    __ARGS[option.${i}.exists]="true"
                 else
                     value="$1"
                     local i_short
@@ -1372,36 +1244,28 @@ args_parse_arguments() {
                         value="${value:1}"
                         value_short="${value:0:1}"
                         # Get options
-                        for i_short in "${!__ARGS_OPTION_ACTION[@]}"; do
-                            if [[ -n "${__ARGS_OPTION_SHORT_0[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_0[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_1[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_1[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_2[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_2[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_3[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_3[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_4[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_4[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_5[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_5[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_6[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_6[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_7[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_7[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_8[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_8[$i_short]}"* ]] || \
-                               [[ -n "${__ARGS_OPTION_SHORT_9[$i_short]}" && "$value_short" = "${__ARGS_OPTION_SHORT_9[$i_short]}"* ]]; then
-                                if [ "store_true" = "${__ARGS_OPTION_ACTION[$i_short]}" ]; then
+                        i_short=0
+                        while [ "$i_short" -lt "${__ARGS[option.size]}" ]; do
+                            if __args_parse_option_on_multi_short_value "$i_short" "$value_short"; then
+                                if [ "store_true" = "${__ARGS[option.${i_short}.action]}" ]; then
                                     value_short="true"
-                                elif [ "store_false" = "${__ARGS_OPTION_ACTION[$i_short]}" ]; then
+                                elif [ "store_false" = "${__ARGS[option.${i_short}.action]}" ]; then
                                     value_short="false"
-                                elif [ "count" = "${__ARGS_OPTION_ACTION[$i_short]}" ]; then
-                                    value_short=$((__ARGS_OPTION_COUNT[i_short] + 1))
+                                elif [ "count" = "${__ARGS[option.${i_short}.action]}" ]; then
+                                    value_short=$((${__ARGS[option.${i_short}.count]} + 1))
                                 else
                                     if [ ${#value} -gt 1 ]; then
                                         value_short="${value:1}"
                                         value=""
-                                        if [ -n "${__ARGS_OPTION_CHOICES[$i_short]}" ] && [[ ! "${__ARGS_OPTION_CHOICES[$i_short]}" =~ (^|[[:space:]])"$value_short"($|[[:space:]]) ]]; then
-                                            >&2 echo "$binary_name: option '$1' is not a valid choise (${__ARGS_OPTION_CHOICES[$i_short]// /, })"
+                                        if [ -n "${__ARGS[option.${i_short}.choices]}" ] && [[ ! "${__ARGS[option.${i_short}.choices]}" =~ (^|[[:space:]])"$value_short"($|[[:space:]]) ]]; then
+                                            >&2 echo "$binary_name: option '-$value_short' is not a valid choise (${__ARGS[option.${i_short}.choices]// /, })"
                                             return 1
                                         fi
                                     elif [ $# -gt 1 ] && [[ "$2" != "--" ]]; then
                                         value_short="$2"
                                         value=""
-                                        if [ -n "${__ARGS_OPTION_CHOICES[$i_short]}" ] && [[ ! "${__ARGS_OPTION_CHOICES[$i_short]}" =~ (^|[[:space:]])"$value_short"($|[[:space:]]) ]]; then
-                                            >&2 echo "$binary_name: option '$1' is not a valid choise (${__ARGS_OPTION_CHOICES[$i_short]// /, })"
+                                        if [ -n "${__ARGS[option.${i_short}.choices]}" ] && [[ ! "${__ARGS[option.${i_short}.choices]}" =~ (^|[[:space:]])"$value_short"($|[[:space:]]) ]]; then
+                                            >&2 echo "$binary_name: option '-$value_short' is not a valid choise (${__ARGS[option.${i_short}.choices]// /, })"
                                             return 1
                                         fi
                                         shift
@@ -1410,15 +1274,16 @@ args_parse_arguments() {
                                         return 1
                                     fi
                                 fi
-                                if [ "append" = "${__ARGS_OPTION_ACTION[$i_short]}" ]; then
-                                    __args_parse_assign_option_multi_values "$i_short" "${__ARGS_OPTION_COUNT[$i_short]}" "$value_short"
+                                if [ "append" = "${__ARGS[option.${i_short}.action]}" ]; then
+                                    __args_parse_assign_option_multi_values "$i_short" "${__ARGS[option.${i_short}.count]}" "$value_short"
                                 else
                                     __args_parse_assign_option_value "$i_short" "$value_short"
                                 fi
-                                __ARGS_OPTION_COUNT[$i_short]=$((__ARGS_OPTION_COUNT[i_short] + 1))
-                                __ARGS_OPTION_ISEXSISTS[$i_short]="true"
+                                __ARGS[option.${i_short}.count]=$((${__ARGS[option.${i_short}.count]} + 1))
+                                __ARGS[option.${i_short}.exists]="true"
                                 break
                             fi
+                            i_short=$((i_short + 1))
                         done
                     done
                 fi
@@ -1426,26 +1291,25 @@ args_parse_arguments() {
                 is_option="true"
                 break
             fi
+            i=$((i + 1))
         done
         if [ "$is_option" = "false" ]; then
             if [[ "$1" = "--"* ]]; then
                 >&2 echo "$binary_name: invalid option -- '$1'"
                 return 1
             elif [[ "$1" = "-"* ]]; then
-                local value
-                value="${1:0:2}"
-                >&2 echo "$binary_name: invalid option -- '$value'"
+                >&2 echo "$binary_name: invalid option -- '${1:0:2}'"
                 return 1
             fi
-            if [ "$j" -lt "${#__ARGS_ARGUMENT_NAME[@]}" ]; then
-                if [ -n "${__ARGS_ARGUMENT_CHOICES[$j]}" ] && [[ ! "${__ARGS_ARGUMENT_CHOICES[$j]}" =~ (^|[[:space:]])"$1"($|[[:space:]]) ]]; then
-                    >&2 echo "$binary_name: argument '$1' is not a valid choise (${__ARGS_ARGUMENT_CHOICES[$j]// /, })"
+            if [ "$positional_index" -lt "${__ARGS[argument.size]}" ]; then
+                if [ -n "${__ARGS[argument.$positional_index.choices]}" ] && [[ ! "${__ARGS[argument.$positional_index.choices]}" =~ (^|[[:space:]])"$1"($|[[:space:]]) ]]; then
+                    >&2 echo "$binary_name: argument '$1' is not a valid choise (${__ARGS[argument.$positional_index.choices]// /, })"
                     return 1
                 fi
-                __ARGS_ARGUMENT_ISEXSISTS[$j]="true"
-                __ARGS_ARGUMENT_COUNT[$j]=$((__ARGS_ARGUMENT_COUNT[j] + 1))
-                ARGS[${__ARGS_ARGUMENT_NAME[$j]}]="$1"
-                j=$((j + 1))
+                ARGS[${__ARGS[argument.$positional_index.name]}]="$1"
+                __ARGS[argument.$positional_index.count]=$((${__ARGS[argument.$positional_index.count]} + 1))
+                __ARGS[argument.$positional_index.exists]="true"
+                positional_index=$((positional_index + 1))
                 shift
             else
                 >&2 echo "$binary_name: extra argument(s) '$*'"
@@ -1455,15 +1319,15 @@ args_parse_arguments() {
     done
     # Get arguments
     if [ $# -gt 0 ]; then
-        while [ "$j" -lt "${#__ARGS_ARGUMENT_NAME[@]}" ]; do
-            if [ -n "${__ARGS_ARGUMENT_CHOICES[$j]}" ] && [[ ! "${__ARGS_ARGUMENT_CHOICES[$j]}" =~ (^|[[:space:]])"$1"($|[[:space:]]) ]]; then
-                >&2 echo "$binary_name: argument '$1' is not a valid choise (${__ARGS_ARGUMENT_CHOICES[$j]// /, })"
+        while [ "$positional_index" -lt "${__ARGS[argument.size]}" ]; do
+            if [ -n "${__ARGS[argument.$positional_index.choices]}" ] && [[ ! "${__ARGS[argument.$positional_index.choices]}" =~ (^|[[:space:]])"$1"($|[[:space:]]) ]]; then
+                >&2 echo "$binary_name: argument '$1' is not a valid choise (${__ARGS[argument.${j}.choices]// /, })"
                 return 1
             fi
-            __ARGS_ARGUMENT_ISEXSISTS[$j]="true"
-            __ARGS_ARGUMENT_COUNT[$j]=$((__ARGS_ARGUMENT_COUNT[j] + 1))
-            ARGS[${__ARGS_ARGUMENT_NAME[$j]}]="$1"
-            j=$((j + 1))
+            ARGS[${__ARGS[argument.$positional_index.name]}]="$1"
+            __ARGS[argument.$positional_index.count]=$((${__ARGS[argument.$positional_index.count]} + 1))
+            __ARGS[argument.$positional_index.exists]="true"
+            positional_index=$((positional_index + 1))
             shift
             if [ $# -eq 0 ]; then
                 break
@@ -1475,111 +1339,111 @@ args_parse_arguments() {
         return 1
     fi
     # Required
-    for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-        if [ "${__ARGS_OPTION_REQUIRED[$i]}" = "true" ]; then
+    i=0
+    while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+        if [ "${__ARGS[option.${i}.required]}" = "true" ]; then
             local name=""
-            if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-                name="${__ARGS_OPTION_SHORT_0[$i]}"
-            elif [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                name="${__ARGS_OPTION_LONG_0[$i]}"
-            fi
+            [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && name="${__ARGS[option.${i}.long.0]}"
+            [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && name="${__ARGS[option.${i}.short.0]}"
             if [ ! "${ARGS[$name]+abracadabra}" ]; then
-                if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-                    >&2 echo "$binary_name: option '-$name' is required"
-                elif [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                    >&2 echo "$binary_name: option '--$name' is required"
-                fi
+                [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && name="--$name"
+                [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && name="-$name"
+                >&2 echo "$binary_name: option '$name' is required"
                 return 1
             fi
         fi
+        i=$((i + 1))
     done
-    for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
-        if [ "${__ARGS_ARGUMENT_REQUIRED[$i]}" = "true" ]; then
-            if [ ! "${ARGS[${__ARGS_ARGUMENT_NAME[$i]}]+abracadabra}" ]; then
-                >&2 echo "$binary_name: argument '${__ARGS_ARGUMENT_NAME[$i]}' is required"
+    i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        if [ "${__ARGS[argument.${i}.required]}" = "true" ]; then
+            if [ ! "${ARGS[${__ARGS[argument.${i}.name]}]+abracadabra}" ]; then
+                >&2 echo "$binary_name: argument '${__ARGS[argument.${i}.name]}' is required"
                 return 1
             fi
         fi
+        i=$((i + 1))
     done
     # Default
-    for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
-        if [ ! "${ARGS[${__ARGS_ARGUMENT_NAME[$i]}]+abracadabra}" ]; then
-            if [ -n "${__ARGS_ARGUMENT_DEFAULT[$i]}" ]; then
-                ARGS[${__ARGS_ARGUMENT_NAME[$i]}]="${__ARGS_ARGUMENT_DEFAULT[$i]}"
+    i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        if [ ! "${ARGS[${__ARGS[argument.${i}.name]}]+abracadabra}" ]; then
+            if [ -n "${__ARGS[argument.${i}.default]}" ]; then
+                local name=""
+                name="${__ARGS[argument.${i}.name]}"
+                ARGS[$name]="${__ARGS[argument.${i}.default]}"
             fi
         fi
+        i=$((i + 1))
     done
-    local name=""
-    for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-        if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-            name="${__ARGS_OPTION_SHORT_0[$i]}"
-        elif [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-            name="${__ARGS_OPTION_LONG_0[$i]}"
-        fi
-        if [ "${__ARGS_OPTION_NARGS[$i]}" -gt 1 ] || \
-           [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-           [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-            if [ ! "${ARGS[${name}_0]+abracadabra}" ]; then
-                if [ -n "${__ARGS_OPTION_DEFAULT[$i]}" ]; then
-                    local index_default=0
-                    local value_default
-                    for value_default in ${__ARGS_OPTION_DEFAULT[$i]}; do
-                        __args_parse_assign_option_multi_values "$i" "$index_default" "$value_default"
-                        index_default=$((index_default + 1))
-                    done
-                    if [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-                       [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-                        __ARGS_OPTION_COUNT[$i]="$index_default"
-                    fi
+    i=0
+    while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+        local name=""
+        [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && name="${__ARGS[option.${i}.long.0]}"
+        [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && name="${__ARGS[option.${i}.short.0]}"
+        if [ ! "${ARGS[${name}]+abracadabra}" ] && [ -n "${__ARGS[option.${i}.default]}" ]; then
+            if [ "${__ARGS[option.${i}.nargs]}" -gt 1 ] || \
+               [ "infinite" = "${__ARGS[option.${i}.action]}" ] || \
+               [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                local index_default=0
+                local value_default
+                for value_default in ${__ARGS[option.${i}.default]}; do
+                    __args_parse_assign_option_multi_values "$i" "$index_default" "$value_default"
+                    index_default=$((index_default + 1))
+                done
+                if [ "infinite" = "${__ARGS[option.${i}.action]}" ] || \
+                    [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                    __ARGS[option.${i}.count]="$index_default"
                 fi
-            fi
-        else
-            if [ ! "${ARGS[$name]+abracadabra}" ]; then
-                if [ "count" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
+            else
+                if [ "count" = "${__ARGS[option.${i}.action]}" ]; then
                     __args_parse_assign_option_value "$i" "0"
                 fi
-                if [ -n "${__ARGS_OPTION_DEFAULT[$i]}" ]; then
-                    __args_parse_assign_option_value "$i" "${__ARGS_OPTION_DEFAULT[$i]}"
+                if [ -n "${__ARGS[option.${i}.default]}" ]; then
+                    __args_parse_assign_option_value "$i" "${__ARGS[option.${i}.default]}"
                 fi
             fi
         fi
+        i=$((i + 1))
     done
     # Dest
-    for i in "${!__ARGS_OPTION_ACTION[@]}"; do
-        if [ -n "${__ARGS_OPTION_DEST[$i]}" ]; then
-            if [ "${__ARGS_OPTION_NARGS[$i]}" -gt 1 ] || \
-               [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-               [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-                declare -a -g "${__ARGS_OPTION_DEST[$i]}=()"
+    i=0
+    while [ "$i" -lt "${__ARGS[option.size]}" ]; do
+        if [ -n "${__ARGS[option.${i}.dest]}" ]; then
+            if [ "${__ARGS[option.${i}.nargs]}" -gt 1 ] || \
+               [ "infinite" = "${__ARGS[option.${i}.action]}" ] || \
+               [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                declare -a -g "${__ARGS[option.${i}.dest]}=()"
                 local nargs=0
                 local nargs_max
-                if [ "infinite" = "${__ARGS_OPTION_ACTION[$i]}" ] || \
-                   [ "append" = "${__ARGS_OPTION_ACTION[$i]}" ]; then
-                    nargs_max="${__ARGS_OPTION_COUNT[$i]}"
+                if [ "infinite" = "${__ARGS[option.${i}.action]}" ] || \
+                   [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                    nargs_max="${__ARGS[option.${i}.count]}"
                 else
-                    nargs_max="${__ARGS_OPTION_NARGS[$i]}"
+                    nargs_max="${__ARGS[option.${i}.nargs]}"
                 fi
                 while [ "$nargs" -lt "$nargs_max" ]; do
-                    if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-                        declare -a -g "${__ARGS_OPTION_DEST[$i]}+=('${ARGS[${__ARGS_OPTION_SHORT_0[$i]}_${nargs}]:-}')"
-                    elif [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                        declare -a -g "${__ARGS_OPTION_DEST[$i]}+=('${ARGS[${__ARGS_OPTION_LONG_0[$i]}_${nargs}]:-}')"
-                    fi
+                    local name=""
+                    [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && name="${__ARGS[option.${i}.long.0]}"
+                    [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && name="${__ARGS[option.${i}.short.0]}"
+                    declare -a -g "${__ARGS[option.${i}.dest]}+=('${ARGS[${name}.${nargs}]:-}')"
                     nargs=$((nargs + 1))
                 done
             else
-                if [ -n "${__ARGS_OPTION_SHORT_0[$i]}" ]; then
-                    declare -g "${__ARGS_OPTION_DEST[$i]}=${ARGS[${__ARGS_OPTION_SHORT_0[$i]}]:-}"
-                elif [ -n "${__ARGS_OPTION_LONG_0[$i]}" ]; then
-                    declare -g "${__ARGS_OPTION_DEST[$i]}=${ARGS[${__ARGS_OPTION_LONG_0[$i]}]:-}"
-                fi
+                local name=""
+                [ "${__ARGS[option.${i}.long.size]}" -ne 0 ] && name="${__ARGS[option.${i}.long.0]}"
+                [ "${__ARGS[option.${i}.short.size]}" -ne 0 ] && name="${__ARGS[option.${i}.short.0]}"
+                declare -a -g "${__ARGS[option.${i}.dest]}+=('${ARGS[${name}]:-}')"
             fi
         fi
+        i=$((i + 1))
     done
-    for i in "${!__ARGS_ARGUMENT_NAME[@]}"; do
-        if [ -n "${__ARGS_ARGUMENT_DEST[$i]}" ]; then
-            declare -g "${__ARGS_ARGUMENT_DEST[$i]}=${ARGS[${__ARGS_ARGUMENT_NAME[$i]}]:-}"
+    i=0
+    while [ "$i" -lt "${__ARGS[argument.size]}" ]; do
+        if [ -n "${__ARGS[argument.${i}.dest]}" ]; then
+            declare -g "${__ARGS[argument.${i}.dest]}=${ARGS[${__ARGS[argument.${i}.name]}]:-}"
         fi
+        i=$((i + 1))
     done
     return 0
 }
