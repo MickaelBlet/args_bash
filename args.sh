@@ -249,7 +249,7 @@ __args_parse_option_is_multi_short_value() {
     local i
     i=0
     while [ "$i" -lt "${__ARGS[option.${index}.short.size]}" ]; do
-        name+="${__ARGS[option.${index}.short.${i}]}"
+        name="${__ARGS[option.${index}.short.${i}]}"
         if [[ "$value" = "-$name"* ]]; then
             return 0
         fi
@@ -265,7 +265,7 @@ __args_parse_option_on_multi_short_value() {
     local i
     i=0
     while [ "$i" -lt "${__ARGS[option.${index}.short.size]}" ]; do
-        name+="${__ARGS[option.${index}.short.${i}]}"
+        name="${__ARGS[option.${index}.short.${i}]}"
         if [[ "$value" = "$name"* ]]; then
             return 0
         fi
@@ -451,6 +451,8 @@ args_count() {
 #     --help      Usage helper
 #     --metavar   Usage argument name (if not set use long/short name)
 #     --nargs     The number of arguments that should be consumed
+#     --name      Set the name of positionnal argument
+#     --flag      Add a optional argument
 #     --required  Is required if exists
 #   example:
 #     args_add_argument --help="help of FOO" --dest="FOO" -- "FOO"
@@ -463,11 +465,8 @@ args_add_argument() {
     local metavar=""
     local nargs=1
     local required=false
-    while true; do
-        if [ $# -eq 0 ]; then
-            >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: end of options is required '--'"
-            return 1
-        fi
+    local args=()
+    while [ $# -ne 0 ]; do
         case $1 in
             "--")
                 shift
@@ -546,10 +545,38 @@ args_add_argument() {
             "--required")
                 required=true
                 shift;;
-            *)
+            "--name")
+                if [ $# -le 1 ]; then
+                    >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--name' option require a argument"
+                    return 1
+                fi
+                args+=("$2")
+                shift 2;;
+            "--name="*)
+                args+=("${1#*=}")
+                shift;;
+            "--flag")
+                if [ $# -le 1 ]; then
+                    >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: '--flag' option require a argument"
+                    return 1
+                fi
+                args+=("$2")
+                shift 2;;
+            "--flag="*)
+                args+=("${1#*=}")
+                shift;;
+            "-"*)
                 >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: unrecognized option '$1'"
                 return 1;;
+            *)
+                args+=("$1")
+                shift;;
         esac
+    done
+
+    while [ $# -ne 0 ]; do
+        args+=("$1")
+        shift
     done
 
     # bad format of action
@@ -617,7 +644,7 @@ args_add_argument() {
     fi
 
     # not name or flags
-    if [ $# -eq 0 ]; then
+    if [ ${#args[@]} -eq 0 ]; then
         >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: need a flag or argument name"
         return 1
     fi
@@ -627,29 +654,30 @@ args_add_argument() {
     local short_flags=()
     local long_flags=()
     local argument_name=""
+    local arg
     # check format of argument
-    while [ $# -ne 0 ]; do
-        if [[ "$1" == "--"* ]]; then
+    for arg in "${args[@]}"; do
+        if [[ "$arg" == "--"* ]]; then
             # already exists
-            if __args_already_exists "${1:2}"; then
-                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: option name '${1}' already exists"
+            if __args_already_exists "${arg:2}"; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: option name '${arg}' already exists"
                 return 1
             fi
             is_flag="true"
-            [[ ! "${long_flags[*]:-}" =~ (^|[[:space:]])"${1:2}"($|[[:space:]]) ]] && long_flags+=("${1:2}")
-        elif [[ "$1" == "-"* ]]; then
+            [[ ! "${long_flags[*]:-}" =~ (^|[[:space:]])"${arg:2}"($|[[:space:]]) ]] && long_flags+=("${arg:2}")
+        elif [[ "$arg" == "-"* ]]; then
             # size or digit of short
-            if [ "${#1}" -ne 2 ] || [[ "$1" =~ ^"-"[[:digit:]]$ ]]; then
-                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option name '$1' not valid"
+            if [ "${#arg}" -ne 2 ] || [[ "$arg" =~ ^"-"[[:digit:]]$ ]]; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: short option name '$arg' not valid"
                 return 1
             fi
             # already exists
-            if __args_already_exists "${1:1}"; then
-                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: option name '${1}' already exists"
+            if __args_already_exists "${arg:1}"; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: option name '${arg}' already exists"
                 return 1
             fi
             is_flag="true"
-            [[ ! "${short_flags[*]:-}" =~ (^|[[:space:]])"${1:1}"($|[[:space:]]) ]] && short_flags+=("${1:1}")
+            [[ ! "${short_flags[*]:-}" =~ (^|[[:space:]])"${arg:1}"($|[[:space:]]) ]] && short_flags+=("${arg:1}")
         else
             # multi argument name
             if [ "$is_argument" = "true" ]; then
@@ -657,23 +685,22 @@ args_add_argument() {
                 return 1
             fi
             # empty argument name
-            if [ -z "$1" ]; then
+            if [ -z "$arg" ]; then
                 >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: name of argument is empty"
                 return 1
             fi
             # already exists
-            if __args_already_exists "$1"; then
-                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: argument name '${1}' already exists"
+            if __args_already_exists "$arg"; then
+                >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: argument name '${arg}' already exists"
                 return 1
             fi
             is_argument="true"
-            argument_name="$1"
+            argument_name="$arg"
         fi
         if [ "$is_argument" = "true" ] && [ "$is_flag" = "true" ]; then
             >&2 echo "$0: line ${BASH_LINENO[0]}: ${FUNCNAME[0]}: you can't mixte argument and flag(s)"
             return 1
         fi
-        shift
     done
 
     # sort flags
@@ -1124,7 +1151,6 @@ args_parse_arguments() {
                 return 64
             fi
         done
-        local is_option="false"
         # Get options
         i=0
         while [ "$i" -lt "${__ARGS[option.size]}" ]; do
@@ -1197,7 +1223,6 @@ args_parse_arguments() {
                     __ARGS[option.${i}.exists]="true"
                     shift
                 fi
-                is_option="true"
                 break
             elif __args_parse_option_is_assign_value "$i" "$1"; then
                 if [ "store" = "${__ARGS[option.${i}.action]}" ] || [ "append" = "${__ARGS[option.${i}.action]}" ]; then
@@ -1219,7 +1244,6 @@ args_parse_arguments() {
                     >&2 echo "$binary_name: option '$1' don't take a argument"
                     return 1
                 fi
-                is_option="true"
                 break
             elif __args_parse_option_is_multi_short_value "$i" "$1"; then
                 local value=""
@@ -1285,15 +1309,18 @@ args_parse_arguments() {
                             fi
                             i_short=$((i_short + 1))
                         done
+                        if [ "$i_short" -eq "${__ARGS[option.size]}" ]; then
+                            >&2 echo "$binary_name: invalid option -- '-$value_short'"
+                            return 1
+                        fi
                     done
                 fi
                 shift
-                is_option="true"
                 break
             fi
             i=$((i + 1))
         done
-        if [ "$is_option" = "false" ]; then
+        if [ "$i" -eq "${__ARGS[option.size]}" ]; then
             if [[ "$1" = "--"* ]]; then
                 >&2 echo "$binary_name: invalid option -- '$1'"
                 return 1

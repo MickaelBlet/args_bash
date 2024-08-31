@@ -22,7 +22,7 @@ args_add_argument \
     --help="print hello" \
     --action="store_true" \
     --dest="DO_HELLO" \
-    -- "-p" "--print-hello"
+    -- "-p" "--print-hello" "-g" "-b" "-d" "-e" "-f"
 args_add_argument \
     --help="help of option" \
     --nargs=+ \
@@ -34,7 +34,7 @@ args_add_argument \
     --action="append" \
     --default="APPP1 APPP2" \
     --dest=APPEND \
-    -- "--append"
+    -- "--append" "-a"
 args_add_argument \
     --help="help of count" \
     --action="count" \
@@ -52,14 +52,15 @@ echo "${ARGS[c]}"
 echo "'ARG1' argument from dest ${ARG1:-}"
 echo "'ARG2' argument from dest ${ARG2:-}"
 echo "'ARG1' argument from map  ${ARGS[ARG1]}"
-echo "'--option' option from map ${ARGS[option_0]:-}"
-echo "'--option' option from map ${ARGS[option_1]:-}"
-echo "'--option' option from map ${ARGS[option_2]:-}"
+echo "'--option' option from map ${ARGS[option.0]:-}"
+echo "'--option' option from map ${ARGS[option.1]:-}"
+echo "'--option' option from map ${ARGS[option.2]:-}"
 
-echo "'--append' option from map ${ARGS[append_0]:-}"
-echo "'--append' option from map ${ARGS[append_1]:-}"
-echo "'--append' option from map ${ARGS[append_2]:-}"
+echo "'--append' option from map ${ARGS[a.0]:-}"
+echo "'--append' option from map ${ARGS[a.1]:-}"
+echo "'--append' option from map ${ARGS[a.2]:-}"
 
+echo "'--option' option from map ${ARGS[option]:-}"
 echo "'--option' option from dest ${OPTIONS[*]:-}"
 for op in "${OPTIONS[@]:-}"; do
     echo "$op"
