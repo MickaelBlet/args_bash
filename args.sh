@@ -766,6 +766,8 @@ args_add_argument() {
             __ARGS[option.${__ARGS[option.size]}.default]="true"
         elif [ "$action" = "store_true" ]; then
             __ARGS[option.${__ARGS[option.size]}.default]="false"
+        elif [ -z "$default" ] && [ "$action" = "count" ]; then
+            __ARGS[option.${__ARGS[option.size]}.default]="0"
         else
             __ARGS[option.${__ARGS[option.size]}.default]="$default"
         fi
@@ -1261,12 +1263,13 @@ args_parse_arguments() {
                     __ARGS[option.${i}.count]=$((${__ARGS[option.${i}.count]} + 1))
                     __ARGS[option.${i}.exists]="true"
                 else
-                    value="$1"
+                    # remove first '-'
+                    value="${1:1}"
                     local i_short
                     local value_short
                     while [ ${#value} -ge 1 ]; do
-                        value="${value:1}"
                         value_short="${value:0:1}"
+                        value="${value:1}"
                         # Get options
                         i_short=0
                         while [ "$i_short" -lt "${__ARGS[option.size]}" ]; do
@@ -1278,8 +1281,8 @@ args_parse_arguments() {
                                 elif [ "count" = "${__ARGS[option.${i_short}.action]}" ]; then
                                     value_short=$((${__ARGS[option.${i_short}.count]} + 1))
                                 else
-                                    if [ ${#value} -gt 1 ]; then
-                                        value_short="${value:1}"
+                                    if [ ${#value} -ge 1 ]; then
+                                        value_short="$value"
                                         value=""
                                         if [ -n "${__ARGS[option.${i_short}.choices]}" ] && [[ ! "${__ARGS[option.${i_short}.choices]}" =~ (^|[[:space:]])"$value_short"($|[[:space:]]) ]]; then
                                             >&2 echo "$binary_name: option '-$value_short' is not a valid choise (${__ARGS[option.${i_short}.choices]// /, })"
@@ -1299,6 +1302,8 @@ args_parse_arguments() {
                                     fi
                                 fi
                                 if [ "append" = "${__ARGS[option.${i_short}.action]}" ]; then
+                                    __args_parse_assign_option_multi_values "$i_short" "${__ARGS[option.${i_short}.count]}" "$value_short"
+                                elif [ "infinite" = "${__ARGS[option.${i_short}.action]}" ]; then
                                     __args_parse_assign_option_multi_values "$i_short" "${__ARGS[option.${i_short}.count]}" "$value_short"
                                 else
                                     __args_parse_assign_option_value "$i_short" "$value_short"
@@ -1419,16 +1424,11 @@ args_parse_arguments() {
                     index_default=$((index_default + 1))
                 done
                 if [ "infinite" = "${__ARGS[option.${i}.action]}" ] || \
-                    [ "append" = "${__ARGS[option.${i}.action]}" ]; then
+                   [ "append" = "${__ARGS[option.${i}.action]}" ]; then
                     __ARGS[option.${i}.count]="$index_default"
                 fi
             else
-                if [ "count" = "${__ARGS[option.${i}.action]}" ]; then
-                    __args_parse_assign_option_value "$i" "0"
-                fi
-                if [ -n "${__ARGS[option.${i}.default]}" ]; then
-                    __args_parse_assign_option_value "$i" "${__ARGS[option.${i}.default]}"
-                fi
+                __args_parse_assign_option_value "$i" "${__ARGS[option.${i}.default]}"
             fi
         fi
         i=$((i + 1))
