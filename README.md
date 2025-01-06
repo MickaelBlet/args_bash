@@ -38,7 +38,7 @@ args_parse_arguments "$@"
 echo "'ARG1' argument from dest ${ARG1:-}"
 echo "'ARG1' argument from map  ${ARGS[ARG1]}"
 echo "'--option' option from map ${ARGS[option]}"
-if $DO_HELLO; then
+if ${DO_HELLO:-false}; then
     echo "Hello world"
 fi
 ```
@@ -78,18 +78,26 @@ Hello world
 
 ## Documentations
 
+### Functions
+
 |Function|Description|
 |---|---|
-|[args_add_argument](docs/functions.md#args_add_argument)|Add a argument|
-|[args_parse_arguments](docs/functions.md#args_parse_arguments)|Convert argument strings to objects and assign them as attributes on the ARGS map|
-|[args_set_description](docs/functions.md#args_set_description)|Set a usage description|
-|[args_set_epilog](docs/functions.md#args_set_epilog)|Set a epilog description|
-|[args_set_usage_width](docs/functions.md#args_set_usage_width)|Set the widths of usage message|
-|[args_set_usage](docs/functions.md#args_set_usage)|Set a full usage message|
-|[args_usage](docs/functions.md#args_usage)|Show/Generate usage message|
-|[args_clean](docs/functions.md#args_clean)|Clean all map and array for recalled|
-|[args_debug_values](docs/functions.md#args_debug_values)|Show all values of arguments and options|
+|[args_add_argument](docs/functions.md#args_add_argument)|Add a argument.|
+|[args_parse_arguments](docs/functions.md#args_parse_arguments)|Convert argument strings to objects and assign them as attributes on the ARGS map.|
+|[args_clean](docs/functions.md#args_clean)|Clean all map and array for recalled.|
+|[args_count](docs/functions.md#args_count)|Count the number of occurence of argument after parsed.|
+|[args_debug_values](docs/functions.md#args_debug_values)|Show all values of arguments and options.|
+|[args_isexists](docs/functions.md#args_isexists)|Check if argument is exists after parsed.|
+|[args_set_description](docs/functions.md#args_set_description)|Set a usage description.|
+|[args_set_epilog](docs/functions.md#args_set_epilog)|Set a epilog description.|
+|[args_set_program_name](docs/functions.md#args_set_program_name)|Set the program name for usage message.|
+|[args_set_usage_width](docs/functions.md#args_set_usage_width)|Set the widths of usage message.|
+|[args_set_usage](docs/functions.md#args_set_usage)|Set a full usage message.|
+|[args_usage](docs/functions.md#args_usage)|Show/Generate usage message.|
 
-|Global|
-|---|
-|[variables](docs/global.md#variables)|
+### Global variables
+
+|Name|Description|
+|---|---|
+|__ARGS|Assossiative array for use internaly in args script.|
+|ARGS|Assossiative array for store after [args_parse_arguments](../README.md#args_parse_arguments).|

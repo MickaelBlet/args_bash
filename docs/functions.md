@@ -4,13 +4,17 @@
 
 Add a argument
 
-|option|description|
+|Option|Description|
 |---|---|
-|--action|Action store, store_true, store_false (default:store)|
+|--action|Action append, count, store, store_true, store_false (default:store)|
+|--choices|List of valid values (separate by spaces)|
 |--default|Default value|
 |--dest|Destination variable|
+|--flag|Add a optional argument|
 |--help|Usage helper|
 |--metavar|Usage argument name (if not set use long/short name)|
+|--name|Set the name of positionnal argument|
+|--nargs|The number of arguments that should be consumed|
 |--required|Is required if exists|
 
 If error return 1.
@@ -27,7 +31,7 @@ args_add_argument -- "FOO"
 # boolean optional argument
 args_add_argument --action "store_true" -- "-f" "--foo"
 # not boolean optional argument
-args_add_argument --action="store_false" -- "-f" "--foo"
+args_add_argument --flag "-f" --flag "--foo" --action="store_false"
 # optional argument
 args_add_argument -- "-f" "--foo"
 ```
@@ -115,7 +119,7 @@ Concat all arguments.
 ### example
 
 ```bash
-args_set_usage "usage: my_prog [options...]" "--" "[args...]"
+args_set_usage "usage: my_prog [options...]" " -- " "[args...]"
 ```
 
 ## args_set_alternative
